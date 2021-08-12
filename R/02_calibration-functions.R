@@ -102,7 +102,7 @@ str(test_results)
 
 plot(test_results$prop_N1)
 
-# compare test output to targets 
+##### compare test output to targets ######
 # TARGET 1: NAC 1 proportion
 plotrix::plotCI(x = lst_targets$dist$N1$time, y = lst_targets$dist$N1$value, 
                 ui = lst_targets$dist$N1$ub,
@@ -111,6 +111,32 @@ plotrix::plotCI(x = lst_targets$dist$N1$time, y = lst_targets$dist$N1$value,
                 xlim = c(0, 30),
                 xlab = "Time", ylab = "Prop. N1")
 points(test_results$prop_N1,
+       col = "green", pch = 20)
+legend("bottomright", legend = c("Targets", "Outputs"),
+       col = c("black", "green"),
+       pch = c(1, 20))
+
+# TARGET 2: NAC 2 proportion
+plotrix::plotCI(x = lst_targets$dist$N2$time, y = lst_targets$dist$N2$value, 
+                ui = lst_targets$dist$N2$ub,
+                li = lst_targets$dist$N2$lb,
+                ylim = c(0, 1), 
+                xlim = c(0, 30),
+                xlab = "Time", ylab = "Prop. N2")
+points(test_results$prop_N2,
+       col = "green", pch = 20)
+legend("bottomright", legend = c("Targets", "Outputs"),
+       col = c("black", "green"),
+       pch = c(1, 20))
+
+# TARGET 3: NAC 3 proportion
+plotrix::plotCI(x = lst_targets$dist$N3$time, y = lst_targets$dist$N3$value, 
+                ui = lst_targets$dist$N3$ub,
+                li = lst_targets$dist$N3$lb,
+                ylim = c(0, 1), 
+                xlim = c(0, 30),
+                xlab = "Time", ylab = "Prop. N3")
+points(test_results$prop_N3,
        col = "green", pch = 20)
 legend("bottomright", legend = c("Targets", "Outputs"),
        col = c("black", "green"),
