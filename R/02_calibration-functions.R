@@ -54,12 +54,27 @@ lst_targets
 plotrix::plotCI(x = lst_targets$dist$N1$time, y = lst_targets$dist$N1$value, 
                 ui = lst_targets$dist$N1$ub,
                 li = lst_targets$dist$N1$lb,
-                ylim = c(0, 1), 
+                ylim = c(0, 1),
+                xlim = c(0, 30),
                 xlab = "Time", ylab = "Prop. N1")
 
+# TARGET 2: NAC 2 proportion
+plotrix::plotCI(x = lst_targets$dist$N2$time, y = lst_targets$dist$N2$value, 
+                ui = lst_targets$dist$N2$ub,
+                li = lst_targets$dist$N2$lb,
+                ylim = c(0, 1),
+                xlim = c(0, 30),
+                xlab = "Time", ylab = "Prop. N2")
+
+# TARGET 3: NAC 3 proportion
+plotrix::plotCI(x = lst_targets$dist$N3$time, y = lst_targets$dist$N3$value, 
+                ui = lst_targets$dist$N3$ub,
+                li = lst_targets$dist$N3$lb,
+                ylim = c(0, 1), 
+                xlim = c(0, 30),
+                xlab = "Time", ylab = "Prop. N3")
 
 
-# TARGET 2: (if you had more...)
 # plotrix::plotCI(x = lst_targets$Target2$time, y = lst_targets$Target2$value, 
 #                 ui = lst_targets$Target2$ub,
 #                 li = lst_targets$Target2$lb,
