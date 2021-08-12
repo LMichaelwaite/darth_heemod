@@ -43,20 +43,21 @@ library(psych)
 ####################################################################
 ######  Load target data  ######
 ####################################################################
-load("CRS_CalibTargets.RData")
-lst_targets <- CRS_targets
-
-
+load("data/ATTR_CalibTargets.RData")
+lst_targets <- ATTR_targets
+lst_targets
 
 
 # Plot the targets
 
-# TARGET 1: Survival ("Surv")
-plotrix::plotCI(x = lst_targets$Surv$time, y = lst_targets$Surv$value, 
-                ui = lst_targets$Surv$ub,
-                li = lst_targets$Surv$lb,
+# TARGET 1: NAC 1 proportion
+plotrix::plotCI(x = lst_targets$dist$N1$time, y = lst_targets$dist$N1$value, 
+                ui = lst_targets$dist$N1$ub,
+                li = lst_targets$dist$N1$lb,
                 ylim = c(0, 1), 
-                xlab = "Time", ylab = "Pr Survive")
+                xlab = "Time", ylab = "Prop. N1")
+
+
 
 # TARGET 2: (if you had more...)
 # plotrix::plotCI(x = lst_targets$Target2$time, y = lst_targets$Target2$value, 
@@ -80,4 +81,25 @@ library(ggplot2)
 library(dplyr)
 # Check that it works
 v_params_test <- c(p_N1N1_6 = 0.6, p_N1N3_6 = 0.15)
-run_sick_sicker_markov(v_params_test) # It works!
+test_results <- run_sick_sicker_markov(v_params_test) # It works!
+
+str(test_results)
+
+plot(test_results$prop_N1)
+
+# compare test output to targets 
+# TARGET 1: NAC 1 proportion
+plotrix::plotCI(x = lst_targets$dist$N1$time, y = lst_targets$dist$N1$value, 
+                ui = lst_targets$dist$N1$ub,
+                li = lst_targets$dist$N1$lb,
+                ylim = c(0, 1), 
+                xlim = c(0, 30),
+                xlab = "Time", ylab = "Prop. N1")
+points(test_results$prop_N1,
+       col = "green", pch = 20)
+legend("bottomright", legend = c("Targets", "Outputs"),
+       col = c("black", "green"),
+       pch = c(1, 20))
+
+
+

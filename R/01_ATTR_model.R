@@ -13,7 +13,7 @@ run_sick_sicker_markov <- function(v_params) {
     #....................
     
     #FROM N1
-    #p_N1N1_6 <- 0.6
+    p_N1N1_6 <- 0.6 ##
     p_N1N1_12 <- 0.01
     p_N1N1_18 <- 0.6
     p_N1N1_24 <- 0.6
@@ -27,7 +27,7 @@ run_sick_sicker_markov <- function(v_params) {
     p_N1N2_30 <- 0.2
     p_N1N2_36 <- 0.2
     
-   #p_N1N3_6 <- 0.15
+   p_N1N3_6 <- 0.15 ##
     p_N1N3_12 <- 0.01
     p_N1N3_18 <- 0.15
     p_N1N3_24 <- 0.15
@@ -311,6 +311,59 @@ run_sick_sicker_markov <- function(v_params) {
     summary(res_mod)
 out <-    plot(res_mod)
    
+
+
+
+####### OUTPUT FOR CALIBRATION ###########################################
+#### NAC stage distribution ####
+
+#get state counts
+c_state <- as.data.frame(get_counts(res_mod))
+
+#convert long table into wide table
+c_state_wide <- pivot_wider(c_state, names_from = state_names, values_from = count) 
+
+#Filter for i) only month 6, 12, 18, 24; ii) control arm
+
+
+nac_dist <-c_state_wide %>%
+  rowwise() %>%
+  mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+  mutate(proportion_alive = total_alive/rowSums(across(Death:total_alive)))%>%
+  mutate(proportion_N1= NAC1/total_alive)%>%
+  mutate(proportion_N2= NAC2/total_alive)%>%
+  mutate(proportion_N3= NAC3/total_alive)%>%
+  filter(.strategy_names =="bsc")%>%
+  select(.strategy_names,markov_cycle, proportion_alive, proportion_N1,proportion_N2, proportion_N3)
+
+nac_dist
+#create NAC dist. outs
+v_prop_N1 <- nac_dist %>% 
+  select(markov_cycle, proportion_N1) %>%
+  filter(markov_cycle %in% c(6, 12, 18, 24))
+v_prop_N1
+
+
+#plot(x= v_prop_N1$markov_cycle, y = v_prop_N1$proportion_N1, ylim = c(0, 1), xlim  = c(0, 30))
+
+
+v_prop_N2 <- nac_dist %>% 
+  select(.strategy_names,markov_cycle, proportion_N2) %>%
+  filter(markov_cycle %in% c(6, 12, 18, 24) & .strategy_names == "bsc")
+v_prop_N2
+
+v_prop_N3 <- nac_dist %>% 
+  select(.strategy_names,markov_cycle, proportion_N3) %>%
+  filter(markov_cycle %in% c(6, 12, 18, 24) & .strategy_names == "bsc")
+v_prop_N3
+
+
+
+####### RETURN OUTPUT  ###########################################
+out <- list(prop_N1 = v_prop_N1)
+
+
+
 
     
     return(out)
