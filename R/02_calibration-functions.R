@@ -173,36 +173,25 @@ legend("bottomright", legend = c("Targets", "Outputs"),
 set.seed(072218)
 
 # number of random samples
-n_samp <- 500
+n_samp <- 1000
 
 # names and number of input parameters to be calibrated
 v_param_names <- c("p_N1N2_6",
                    "p_N1N2_12",
                    "p_N1N2_18",
-                   "p_N1N2_24",
-                   "p_N1N2_30",
-                   "p_N1N2_36",
-                  
+                   
                    "p_N1D_6", 
                    "p_N1D_12",
                    "p_N1D_18",
-                   "p_N1D_24",
-                   "p_N1D_30",
-                   "p_N1D_36",
                    
                    "p_N2N3_6",
                    "p_N2N3_12",
                    "p_N2N3_18",
-                   "p_N2N3_24",
-                   "p_N2N3_30",
-                   "p_N2N3_36",
                   
                    "p_N2D_6", 
                    "p_N2D_12",
-                   "p_N2D_18",
-                   "p_N2D_24",
-                   "p_N2D_30",
-                   "p_N2D_36"
+                   "p_N2D_18"
+                   
 )
   
 n_param <- length(v_param_names)
@@ -214,59 +203,43 @@ n_param <- length(v_param_names)
 lb <- c(p_N1N2_6 = 0.04,
         p_N1N2_12 = 0.04,
         p_N1N2_18 = 0.04,
-        p_N1N2_24 = 0.04,
-        p_N1N2_30 = 0.04,
-        p_N1N2_36 = 0.04,
+        
         
         p_N1D_6 = 0.04,
         p_N1D_12 = 0.04,
         p_N1D_18 = 0.04,
-        p_N1D_24 = 0.04,
-        p_N1D_30 = 0.04,
-        p_N1D_36 = 0.04,
+        
         
         p_N2N3_6 = 0.04,
         p_N2N3_12 = 0.04,
         p_N2N3_18 = 0.04,
-        p_N2N3_24 = 0.04,
-        p_N2N3_30 = 0.04,
-        p_N2N3_36 = 0.04,
+        
         
         p_N2D_6 = 0.04,
         p_N2D_12 = 0.04,
-        p_N2D_18 = 0.04,
-        p_N2D_24 = 0.04,
-        p_N2D_30 = 0.04,
-        p_N2D_36 = 0.04
+        p_N2D_18 = 0.04
+       
 )
 
 ub <- c(p_N1N2_6 = 0.2,
         p_N1N2_12 = 0.2,
         p_N1N2_18 = 0.2,
-        p_N1N2_24 = 0.2,
-        p_N1N2_30 = 0.2,
-        p_N1N2_36 = 0.2,
+       
         
         p_N1D_6 = 0.2,
         p_N1D_12 = 0.2,
         p_N1D_18 = 0.2,
-        p_N1D_24 = 0.2,
-        p_N1D_30 = 0.2,
-        p_N1D_36 = 0.2,
+        
         
         p_N2N3_6 = 0.2,
         p_N2N3_12 = 0.2,
         p_N2N3_18 = 0.2,
-        p_N2N3_24 = 0.2,
-        p_N2N3_30 = 0.2,
-        p_N2N3_36 = 0.2,
+       
         
         p_N2D_6 = 0.2,
         p_N2D_12 = 0.2,
-        p_N2D_18 = 0.2,
-        p_N2D_24 = 0.2,
-        p_N2D_30 = 0.2,
-        p_N2D_36 = 0.2
+        p_N2D_18 = 0.2
+       
 )
 
 

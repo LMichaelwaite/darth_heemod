@@ -118,11 +118,8 @@ run_sick_sicker_markov <- function(v_params) {
           p_N1N2 = ifelse(markov_cycle <= 6 ,p_N1N2_6,
                           ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N1N2_12,
                                  ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N1N2_18,
-                                        ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N1N2_24,
-                                               ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N1N2_30,
-                                                      ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N1N2_24,
-                                                             p_N1N2_36
-                                                      )))))),
+                                        p_N1N2_18))),                                         #If greater than 18, then constant at p_N1N2_18. since NAC data only goes to 18.
+                                        
           
           p_N1N3 = ifelse(markov_cycle <= 6 ,p_N1N3_6,
                           ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N1N3_12,
@@ -136,11 +133,8 @@ run_sick_sicker_markov <- function(v_params) {
           p_N1D = ifelse(markov_cycle <= 6 ,p_N1D_6,
                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N1D_12,
                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N1D_18,
-                                       ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N1D_24,
-                                              ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N1D_30,
-                                                     ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N1D_24,
-                                                            p_N1D_36
-                                                     )))))),
+                                       p_N1D_18))),
+                                       
           
           
           #FROM N2
@@ -165,20 +159,14 @@ run_sick_sicker_markov <- function(v_params) {
           p_N2N3 = ifelse(markov_cycle <= 6 ,p_N2N3_6,
                           ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N2N3_12,
                                  ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N2N3_18,
-                                        ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N2N3_24,
-                                               ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N2N3_30,
-                                                      ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N2N3_24,
-                                                             p_N2N3_36
-                                                      )))))),
+                                        p_N2N3_18))),
+                                        
           
           p_N2D = ifelse(markov_cycle <= 6 ,p_N2D_6,
                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N2D_12,
                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N2D_18,
-                                       ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N2D_24,
-                                              ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N2D_30,
-                                                     ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N2D_24,
-                                                            p_N2D_36
-                                                     )))))),
+                                       p_N2D_18))),
+                                      
           
           #FROM N3
           p_N3N1 = ifelse(markov_cycle <= 6 ,p_N3N1_6,
@@ -342,15 +330,15 @@ run_sick_sicker_markov <- function(v_params) {
     #create NAC dist. outs
     v_prop_N1 <- nac_dist %>% 
       select(markov_cycle, proportion_N1) %>%
-      filter(markov_cycle %in% c(6, 12, 18, 24))
+      filter(markov_cycle %in% c(6, 12, 18))
     
     v_prop_N2 <- nac_dist %>% 
       select(markov_cycle, proportion_N2) %>%
-      filter(markov_cycle %in% c(6, 12, 18, 24))
+      filter(markov_cycle %in% c(6, 12, 18))
     
     v_prop_N3 <- nac_dist %>% 
       select(markov_cycle, proportion_N3) %>%
-      filter(markov_cycle %in% c(6, 12, 18, 24))
+      filter(markov_cycle %in% c(6, 12, 18))
     
   
     v_prop_N1_use <- as.numeric(unlist(v_prop_N1['proportion_N1']))
