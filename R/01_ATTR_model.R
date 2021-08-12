@@ -11,35 +11,35 @@ run_sick_sicker_markov <- function(v_params) {
         #-------------------
         #PLACEHOLDERS
         #....................
-        
+        # HASHED transition intensities are for calibration
         #FROM N1
-        p_N1N1_6 <- 0.6 ##
+        p_N1N1_6 <- 0.6 
         p_N1N1_12 <- 0.01
         p_N1N1_18 <- 0.6
         p_N1N1_24 <- 0.6
         p_N1N1_30 <- 0.6
         p_N1N1_36 <- 0.6
         
-        p_N1N2_6 <- 0.2
-        p_N1N2_12 <- 0.01
-        p_N1N2_18 <- 0.2
-        p_N1N2_24 <- 0.2
-        p_N1N2_30 <- 0.2
-        p_N1N2_36 <- 0.2
+        #p_N1N2_6 <- 0.2
+        #p_N1N2_12 <- 0.01
+        #p_N1N2_18 <- 0.2
+        #p_N1N2_24 <- 0.2
+        #p_N1N2_30 <- 0.2
+        #p_N1N2_36 <- 0.2
         
-       p_N1N3_6 <- 0.15 ##
+        p_N1N3_6 <- 0.15
         p_N1N3_12 <- 0.01
         p_N1N3_18 <- 0.15
         p_N1N3_24 <- 0.15
         p_N1N3_30 <- 0.15
         p_N1N3_36 <- 0.15
         
-        p_N1D_6 <- 0.05
-        p_N1D_12 <- 0.97
-        p_N1D_18 <- 0.05
-        p_N1D_24 <- 0.05
-        p_N1D_30 <- 0.05
-        p_N1D_36 <- 0.05
+        #p_N1D_6 <- 0.05
+        #p_N1D_12 <- 0.97
+        #p_N1D_18 <- 0.05
+        #p_N1D_24 <- 0.05
+        #p_N1D_30 <- 0.05
+        #p_N1D_36 <- 0.05
         
         #FROM N2
         p_N2N1_6 <- 0.5
@@ -56,19 +56,19 @@ run_sick_sicker_markov <- function(v_params) {
         p_N2N2_30 <- 0.3
         p_N2N2_36 <- 0.3
         
-        p_N2N3_6 <- 0.15
-        p_N2N3_12 <- 0.15
-        p_N2N3_18 <- 0.15
-        p_N2N3_24 <- 0.15
-        p_N2N3_30 <- 0.15
-        p_N2N3_36 <- 0.15
+        #p_N2N3_6 <- 0.15
+        #p_N2N3_12 <- 0.15
+        #p_N2N3_18 <- 0.15
+        #p_N2N3_24 <- 0.15
+        #p_N2N3_30 <- 0.15
+        #p_N2N3_36 <- 0.15
         
-        p_N2D_6 <- 0.05
-        p_N2D_12 <- 0.05
-        p_N2D_18 <- 0.05
-        p_N2D_24 <- 0.05
-        p_N2D_30 <- 0.05
-        p_N2D_36 <- 0.05
+        #p_N2D_6 <- 0.05
+        #p_N2D_12 <- 0.05
+        #p_N2D_18 <- 0.05
+        #p_N2D_24 <- 0.05
+        #p_N2D_30 <- 0.05
+        #p_N2D_36 <- 0.05
         
         #FROM N3
         p_N3N1_6 <- 0.5
@@ -92,12 +92,12 @@ run_sick_sicker_markov <- function(v_params) {
         p_N3N3_30 <- 0.15
         p_N3N3_36 <- 0.15
         
-        p_N3D_6 <- 0.05
-        p_N3D_12 <- 0.05
-        p_N3D_18 <- 0.05
-        p_N3D_24 <- 0.05
-        p_N3D_30 <- 0.05
-        p_N3D_36 <- 0.05
+        p_N3D_6 <- 0.15
+        p_N3D_12 <- 0.15
+        p_N3D_18 <- 0.15
+        p_N3D_24 <- 0.15
+        p_N3D_30 <- 0.15
+        p_N3D_36 <- 0.15
         
         #-----------------------------------------
         #DEFINE PARAMETERS
@@ -229,6 +229,9 @@ run_sick_sicker_markov <- function(v_params) {
         #DEFINE TRANSITION
         #.........................................
         
+     
+        
+        
         mat_bsc <- define_transition(
           state_names = c(
             "NAC1",
@@ -236,10 +239,10 @@ run_sick_sicker_markov <- function(v_params) {
             "NAC3",
             "Death"
           ),
-          p_N1N1, p_N1N2, p_N1N3,  p_N1D,
-          p_N2N1, p_N2N2, p_N2N3,  p_N2D,
-          p_N3N1, p_N3N2, p_N3N3, p_N3D,
-          0,      0,      0,   1.00
+          C,p_N1N2,      0,  p_N1D,
+          0,     C, p_N2N3,  p_N2D,
+          0,     0,      C,  p_N3D,
+          0,     0,      0,   1.00
         )
         
         mat_tafa <- define_transition(
@@ -249,10 +252,10 @@ run_sick_sicker_markov <- function(v_params) {
             "NAC3",
             "Death"
           ),
-          p_N1N1, p_N1N2, p_N1N3,  p_N1D,
-          p_N2N1, p_N2N2, p_N2N3,  p_N2D,
-          p_N3N1, p_N3N2, p_N3N3, p_N3D,
-          0,      0,      0,   1.00
+          C,p_N1N2,      0,  p_N1D,
+          0,     C, p_N2N3,  p_N2D,
+          0,     0,      C,  p_N3D,
+          0,     0,      0,   1.00
         )
         
         #-------------------------------------------------------
@@ -306,7 +309,7 @@ run_sick_sicker_markov <- function(v_params) {
           cost = cost,
           effect = utility,
           method = "beginning",
-          init = c(1000, 0, 0, 0)
+          init = c(436, 350, 159, 0)
         )
         summary(res_mod)
     out <-    plot(res_mod)
@@ -324,7 +327,6 @@ run_sick_sicker_markov <- function(v_params) {
     c_state_wide <- pivot_wider(c_state, names_from = state_names, values_from = count) 
     
     #Filter for i) only month 6, 12, 18, 24; ii) control arm
-    
     
     nac_dist <-c_state_wide %>%
       rowwise() %>%
@@ -351,10 +353,20 @@ run_sick_sicker_markov <- function(v_params) {
       filter(markov_cycle %in% c(6, 12, 18, 24))
     
   
+    v_prop_N1_use <- as.numeric(unlist(v_prop_N1['proportion_N1']))
+    v_prop_N2_use <- as.numeric(unlist(v_prop_N2['proportion_N2']))
+    v_prop_N3_use <- as.numeric(unlist(v_prop_N3['proportion_N3']))
+    
+
+    
     ####### RETURN OUTPUT  ###########################################
     out <- list(prop_N1 = v_prop_N1, 
                 prop_N2 = v_prop_N2, 
-                prop_N3 = v_prop_N3)
+                prop_N3 = v_prop_N3,
+                prop_N1_use = v_prop_N1_use, 
+                prop_N2_use = v_prop_N2_use, 
+                prop_N3_use = v_prop_N3_use
+                 )
 
     
     return(out)
