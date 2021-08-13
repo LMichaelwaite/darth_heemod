@@ -297,12 +297,12 @@ run_ATTR_markov <- function(v_params) {
           cost = cost,
           effect = utility,
           method = "beginning",
-          init = c(436, 350, 159, 0)
+          init = c(945, 0, 0, 0)
         )
         summary(res_mod)
 
-       
-    
+# Run1: NAT baseline: init = c(436, 350, 159, 0)       
+# Run2: NAT baseline: init = c(945, 0, 0, 0)       
     
     
     ####### OUTPUT FOR CALIBRATION ###########################################
@@ -345,7 +345,16 @@ run_ATTR_markov <- function(v_params) {
     v_prop_N2_use <- as.numeric(unlist(v_prop_N2['proportion_N2']))
     v_prop_N3_use <- as.numeric(unlist(v_prop_N3['proportion_N3']))
     
-
+### SURV target
+ 
+    v_surv <- nac_dist %>% 
+      select(markov_cycle, proportion_alive)
+  
+    v_surv_use <- as.numeric(unlist(v_surv['proportion_alive']))
+    
+    
+    
+    
     
     ####### RETURN OUTPUT  ###########################################
     #prop_N1 is a DF with cols: cycle number, prop. N1, prop. N2, prop. N3. used to generate graphs
@@ -356,7 +365,9 @@ run_ATTR_markov <- function(v_params) {
                 prop_N3 = v_prop_N3,
                 prop_N1_use = v_prop_N1_use, 
                 prop_N2_use = v_prop_N2_use, 
-                prop_N3_use = v_prop_N3_use
+                prop_N3_use = v_prop_N3_use,
+                surv = v_surv,
+                surv_use = v_surv_use
                  )
 
     

@@ -5,9 +5,6 @@
 
 # 4) Save NAC targets as surv and dist
 
-library(broom)
-
-
 
 ################## 1 ################### 
 ########################################
@@ -19,8 +16,7 @@ library("survival")
 library("ggplot2")
 ###FUNCTION INPUTS
 
-
-
+library("survminer")
 tot.events<-"NA" #tot.events = total no. of events reported. If not reported, then tot.events="NA"
 arm.id<-3 #arm indicator
 ###END FUNCTION INPUTS
@@ -230,8 +226,52 @@ plot(survfit(Surv(rbind(IPD_01,IPD_02,IPD_03)[,1], rbind(IPD_01, IPD_02, IPD_03)
 
 
 
+
+
+
 ################## 2 ################### 
 ########################################
+# define desired time points
+times <- c(1:110 /12)
+
+
+surv_N1_NEW <- survfit(Surv(IPD_01[,1], IPD_01[,2]) ~ 1)
+lst_surv_N1 <- summary(surv_N1_NEW,times)
+
+surv_N2_NEW <- survfit(Surv(IPD_02[,1], IPD_02[,2]) ~ 1)
+lst_surv_N2 <- summary(surv_N2_NEW,times)
+
+surv_N3_NEW <- survfit(Surv(IPD_02[,1], IPD_02[,2]) ~ 1)
+lst_surv_N3 <- summary(surv_N3_NEW,times)
+
+
+
+
+target_surv_N1 <- data.frame(time = lst_surv_N1$time*12, 
+                        value = lst_surv_N1$surv,
+                        ub = lst_surv_N1$upper,
+                        lb =  lst_surv_N1$lower,
+                        se = lst_surv_N1$std.err)
+
+target_surv_N2 <- data.frame(time = lst_surv_N2$time*12, 
+                             value = lst_surv_N2$surv,
+                             ub = lst_surv_N2$upper,
+                             lb =  lst_surv_N2$lower,
+                             se = lst_surv_N2$std.err)
+
+target_surv_N3 <- data.frame(time = lst_surv_N3$time*12, 
+                             value = lst_surv_N3$surv,
+                             ub = lst_surv_N3$upper,
+                             lb =  lst_surv_N3$lower,
+                             se = lst_surv_N3$std.err)
+
+
+                        
+                        
+
+## THE BELOW IS REDUNDANT FOR MODEL TARGET; USE ABOVE 
+
+
 
 #N1
 KM_IPD_01<-as.data.frame(IPD_01)
@@ -251,32 +291,46 @@ KM.est_03<-survfit(Surv(KM_IPD_03[,1],KM_IPD_03[,2])~1,data=KM_IPD_03,type="kapl
 KM.est_03
 summary(KM.est_03)
 
+
 # Convert surv to df for N1, N2, N3
 surv_N1 <- tidy(KM.est_01)
 surv_N2 <- tidy(KM.est_02)
 surv_N3 <- tidy(KM.est_03)
 
 
-target_surv_N1 <- data.frame(time = surv_N1$time, 
-                             value = surv_N1$estimate,
-                             ub = surv_N1$conf.high,
-                             lb =  surv_N1$conf.low,
-                             se = surv_N1$std.error
-)
+#target_surv_N1 <- data.frame(time = surv_N1$time*12, 
+#                             value = surv_N1$estimate,
+#                             ub = surv_N1$conf.high,
+#                             lb =  surv_N1$conf.low,
+#                             se = surv_N1$std.error
+#)
 
-target_surv_N2 <- data.frame(time = surv_N2$time, 
-                             value = surv_N2$estimate,
-                             ub = surv_N2$conf.high,
-                             lb =  surv_N2$conf.low,
-                             se = surv_N2$std.error
-)
+#target_surv_N2 <- data.frame(time = surv_N2$time*12, 
+#                            value = surv_N2$estimate,
+#                             ub = surv_N2$conf.high,
+#                             lb =  surv_N2$conf.low,
+#                             se = surv_N2$std.error
+#)
 
-target_surv_N3 <- data.frame(time = surv_N3$time, 
-                             value = surv_N3$estimate,
-                             ub = surv_N3$conf.high,
-                             lb =  surv_N3$conf.low,
-                             se = surv_N3$std.error
-)
+#target_surv_N3 <- data.frame(time = surv_N3$time*12, 
+#                             value = surv_N3$estimate,
+#                             ub = surv_N3$conf.high,
+#                             lb =  surv_N3$conf.low,
+#                             se = surv_N3$std.error
+#)
+
+
+#target_surv_N3
+
+#months <- 1:108
+
+#indx <- months %% 1/12
+
+#test <- months[!indx]
+
+#test
+#which(abs(target_surv_N3$time-1/12)==min(abs(target_surv_N3$time-1/12)))
+
 
 target_surv <- list(N1 = target_surv_N1,
                     N2 = target_surv_N2,
