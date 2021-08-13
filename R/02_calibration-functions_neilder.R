@@ -1,5 +1,4 @@
-### takes a while to run, make faster by decreasing
-#n_samp <- 500
+# currently broken
 
 
 
