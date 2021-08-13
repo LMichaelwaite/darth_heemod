@@ -96,31 +96,20 @@ source("R/01_ATTR_model.R") # creates the function run_crs_markov()
 v_params_test <- c(p_N1N2_6 = 0.2,
                    p_N1N2_12 = 0.01,
                    p_N1N2_18 = 0.2,
-                   p_N1N2_24 = 0.2,
-                   p_N1N2_30 = 0.2,
-                   p_N1N2_36 = 0.2,
-                   
+               
                    p_N1D_6 = 0.05,
                    p_N1D_12 = 0.97,
                    p_N1D_18 = 0.05,
-                   p_N1D_24 = 0.05,
-                   p_N1D_30 = 0.05,
-                   p_N1D_36 = 0.05,
+             
                    
                    p_N2N3_6 = 0.15,
                    p_N2N3_12 = 0.15,
                    p_N2N3_18 = 0.15,
-                   p_N2N3_24 = 0.15,
-                   p_N2N3_30 = 0.15,
-                   p_N2N3_36 = 0.15,
-                   
+              
                    p_N2D_6 = 0.05,
                    p_N2D_12 = 0.05,
-                   p_N2D_18 = 0.05,
-                   p_N2D_24 = 0.05,
-                   p_N2D_30 = 0.05,
-                   p_N2D_36 = 0.05
-                   )
+                   p_N2D_18 = 0.05
+                              )
 
 
 test_results <- run_ATTR_markov(v_params_test) # It works!
