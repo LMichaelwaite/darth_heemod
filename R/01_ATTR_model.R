@@ -228,9 +228,9 @@ run_ATTR_markov <- function(v_params) {
             "Death"
           ),
           1-(p_N1N2 + p_N1D),                 p_N1N2,           0,  p_N1D,
-          0,     1- (p_N2N3+ p_N2D),      p_N2N3,  p_N2D,
-          0,                      0,   1-(p_N3D),  p_N3D,
-          0,                      0,           0,   1.00
+                           0,     1- (p_N2N3+ p_N2D),      p_N2N3,  p_N2D,
+                           0,                      0,   1-(p_N3D),  p_N3D,
+                           0,                      0,           0,   1.00
         )
         
         mat_tafa <- define_transition(
@@ -300,7 +300,7 @@ run_ATTR_markov <- function(v_params) {
           init = c(436, 350, 159, 0)
         )
         summary(res_mod)
-    out <-    plot(res_mod)
+
        
     
     
