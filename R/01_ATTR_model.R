@@ -348,6 +348,9 @@ run_ATTR_markov <- function(v_params) {
 
     
     ####### RETURN OUTPUT  ###########################################
+    #prop_N1 is a DF with cols: cycle number, prop. N1, prop. N2, prop. N3. used to generate graphs
+    #prop_N3_use is data type "double" used as the model output to assess GOF in calibration
+    
     out <- list(prop_N1 = v_prop_N1, 
                 prop_N2 = v_prop_N2, 
                 prop_N3 = v_prop_N3,
