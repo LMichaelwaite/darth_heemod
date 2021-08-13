@@ -12,7 +12,8 @@
 
 # Model: ATTR Markov Model
 # Inputs to be calibrated: N1N2_i, N1D_i, N2N3_i, N2D_i, where i = (6, 12, 18) 
-# Note: the first NAC landmark KM surves as the baseline distribution. THe second as month 6, and so on
+# Note: the first NAC landmark KM is used as the baseline distribution. THe second as month 6, and so on
+
 # Targets: prop_N1, prop_N2, prop_N3
 
 # Search method: Random search using Latin-Hypercube Sampling
@@ -33,6 +34,11 @@ library(matrixStats) # package used for sumamry statistics
 library(plotrix)
 library(psych)
 
+#model functionality
+library(heemod)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
 
 
 ####################################################################
@@ -85,10 +91,7 @@ plotrix::plotCI(x = lst_targets$dist$N3$time, y = lst_targets$dist$N3$value,
 
 source("R/01_ATTR_model.R") # creates the function run_crs_markov()
 
-library(heemod)
-library(tidyverse)
-library(ggplot2)
-library(dplyr)
+
 # Check that it works
 v_params_test <- c(p_N1N2_6 = 0.2,
                    p_N1N2_12 = 0.01,
@@ -174,7 +177,7 @@ legend("bottomright", legend = c("Targets", "Outputs"),
 set.seed(072218)
 
 # number of random samples
-n_samp <- 1000
+n_samp <- 20
 
 # names and number of input parameters to be calibrated
 v_param_names <- c("p_N1N2_6",
@@ -334,10 +337,10 @@ m_calib_res <- m_calib_res[order(-m_calib_res[,"Overall_fit"]),]
 
 # Examine the top 10 best-fitting sets
 m_calib_res[1:10,]
-m_calib_res[1:100,1]
+m_calib_res[1:10,1]
 
 # Plot the top 100 (top 10%)
-plot(m_calib_res[1:100,1],m_calib_res[1:100,2],
+plot(m_calib_res[1:10,1],m_calib_res[1:10,2],
      xlim=c(lb[1],ub[1]),ylim=c(lb[2],ub[2]),
      xlab = colnames(m_calib_res)[1],ylab = colnames(m_calib_res)[2])
 

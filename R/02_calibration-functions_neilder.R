@@ -11,7 +11,8 @@
 
 # Model: ATTR Markov Model
 # Inputs to be calibrated: N1N2_i, N1D_i, N2N3_i, N2D_i, where i = (6, 12, 18) 
-# Note: the first NAC landmark KM surves as the basline distribution. THe second as month 6, and so on
+# Note: the first NAC landmark KM is used as the baseline distribution. THe second as month 6, and so on
+
 # Targets: prop_N1, prop_N2, prop_N3
 
 # Search method: Random search using Latin-Hypercube Sampling
@@ -82,7 +83,7 @@ plotrix::plotCI(x = lst_targets$dist$N3$time, y = lst_targets$dist$N3$value,
 # - inputs are parameters to be estimated through calibration
 # - outputs correspond to the target data
 
-source("R/01_ATTR_model.R") # creates the function run_crs_markov()
+source("R/01_ATTR_model.R") # creates the function run_ATTR_markov()
 
 library(heemod)
 library(tidyverse)
@@ -345,7 +346,7 @@ for (j in 1:n_init){
   
   
   ### Plot model-predicted output at mean vs targets ###
-  v_out_best <- run_crs_markov(m_calib_res[1,])
+  v_out_best <- run_ATTR_markov(m_calib_res[1,])
 
 
 
