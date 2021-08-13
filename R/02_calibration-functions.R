@@ -1,6 +1,6 @@
 ### takes a while to run, make faster by decreasing
 #n_samp <- 500
-
+# if decrease n_samp, requires to change 1:10 to be in range:  m_calib_res[1:10,]
 
 
 ###########################################################################
