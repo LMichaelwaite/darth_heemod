@@ -296,7 +296,7 @@ for (j in 1:n_samp){
   
   ###  Calculate goodness-of-fit of model outputs to targets  ###
   
-  # TARGET 1: Survival ("Surv")
+  # TARGET 1, 2, 3: NAC distribution
   # log likelihood  
   m_GOF[j,1] <- sum(dnorm(x = lst_targets$dist$N1$value,
                           mean = model_res$prop_N1_use,
