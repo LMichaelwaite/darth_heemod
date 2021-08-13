@@ -1,3 +1,17 @@
+# Description:
+# 1) generate IPD from published KM curves for NAC stages
+# 2) Generate survival calibration targets from the IPD
+# 3) Use the landmark KM curves to estimate NAC distribution at months 1, 6, 12, 18
+
+# 4) Save NAC targets as surv and dist
+
+library(broom)
+
+
+
+################## 1 ################### 
+########################################
+
 #Algorithm to create a raw dataset from DigizeIt readings from a Kaplan-Meier curve
 library("MASS")
 library("splines")
@@ -216,12 +230,105 @@ plot(survfit(Surv(rbind(IPD_01,IPD_02,IPD_03)[,1], rbind(IPD_01, IPD_02, IPD_03)
 
 
 
-#Find Kaplan-Meier estimates
+################## 2 ################### 
+########################################
+
+#N1
 KM_IPD_01<-as.data.frame(IPD_01)
-KM.est<-survfit(Surv(KM_IPD_01[,1],KM_IPD_01[,2])~1,data=KM_IPD_01,type="kaplan-meier",)
-KM.est
-summary(KM.est)
-#
+KM.est_01<-survfit(Surv(KM_IPD_01[,1],KM_IPD_01[,2])~1,data=KM_IPD_01,type="kaplan-meier",)
+KM.est_01
+summary(KM.est_01)
+
+#N2
+KM_IPD_02<-as.data.frame(IPD_02)
+KM.est_02<-survfit(Surv(KM_IPD_02[,1],KM_IPD_02[,2])~1,data=KM_IPD_02,type="kaplan-meier",)
+KM.est_02
+summary(KM.est_02)
+
+#N3
+KM_IPD_03<-as.data.frame(IPD_03)
+KM.est_03<-survfit(Surv(KM_IPD_03[,1],KM_IPD_03[,2])~1,data=KM_IPD_03,type="kaplan-meier",)
+KM.est_03
+summary(KM.est_03)
+
+# Convert surv to df for N1, N2, N3
+surv_N1 <- tidy(KM.est_01)
+surv_N2 <- tidy(KM.est_02)
+surv_N3 <- tidy(KM.est_03)
+
+
+target_surv_N1 <- data.frame(time = surv_N1$time, 
+                             value = surv_N1$estimate,
+                             ub = surv_N1$conf.high,
+                             lb =  surv_N1$conf.low,
+                             se = surv_N1$std.error
+)
+
+target_surv_N2 <- data.frame(time = surv_N2$time, 
+                             value = surv_N2$estimate,
+                             ub = surv_N2$conf.high,
+                             lb =  surv_N2$conf.low,
+                             se = surv_N2$std.error
+)
+
+target_surv_N3 <- data.frame(time = surv_N3$time, 
+                             value = surv_N3$estimate,
+                             ub = surv_N3$conf.high,
+                             lb =  surv_N3$conf.low,
+                             se = surv_N3$std.error
+)
+
+target_surv <- list(N1 = target_surv_N1,
+                    N2 = target_surv_N2,
+                    N3 = target_surv_N3)
+
+
+################## 3 ################### 
+########################################
+# NAC distributions 
+
+# Note: the first NAC landmark KM is used as the baseline distribution. THe second as month 6, and so on
+
+target_dist_N1 <- data.frame(time = c(6, 12, 18), 
+                             value = c(0.46, 0.43, 0.38),
+                             ub = c(0.46, 0.43, 0.38),
+                             lb =  c(0.46, 0.43, 0.38),
+                             se = c(0.01, 0.01, 0.01)
+)
+
+target_dist_N2 <- data.frame(time = c(6, 12, 18), 
+                             value = c(0.37, 0.34, 0.38),
+                             ub = c(0.37, 0.34, 0.38),
+                             lb = c(0.37, 0.34, 0.38),
+                             se = c(0.01, 0.01, 0.01)
+)
+
+target_dist_N3 <- data.frame(time = c(6, 12, 18), 
+                             value = c(0.17, 0.23, 0.24),
+                             ub= c(0.17, 0.23, 0.24),
+                             lb = c(0.17, 0.23, 0.24),
+                             se = c(0.01, 0.01, 0.01)
+)
+
+target_dist <- list(N1 = target_dist_N1,
+                    N2 = target_dist_N2,
+                    N3 = target_dist_N3)
+
+
+################## 4 ################### 
+########################################
+
+# SAVE ATTR targets; dist and surv
+
+
+ATTR_targets <- list(dist = target_dist,
+                     surv = target_surv)
+ATTR_targets 
+
+save(ATTR_targets , file = "data/ATTR_CalibTargets.RData")
+
+
+
 
 
 
