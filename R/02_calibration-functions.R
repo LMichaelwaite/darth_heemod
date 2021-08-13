@@ -173,7 +173,7 @@ legend("bottomright", legend = c("Targets", "Outputs"),
 set.seed(072218)
 
 # number of random samples
-n_samp <- 100
+n_samp <- 1000
 
 # names and number of input parameters to be calibrated
 v_param_names <- c("p_N1N2_6",
