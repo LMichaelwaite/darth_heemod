@@ -1,5 +1,5 @@
-#.strategy_names markov_cycle proportion_N3
 
+# Note: the first NAC landmark KM surves as the baseline distribution. THe second as month 6, and so on
 
 target_dist_N1 <- data.frame(time = c(6, 12, 18), 
                              value = c(0.46, 0.43, 0.38),

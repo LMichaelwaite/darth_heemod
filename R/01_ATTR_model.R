@@ -4,8 +4,8 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 
-#### Sick-Sicker Markov model in a function ####
-run_sick_sicker_markov <- function(v_params) {
+#### ATTR Markov model in a function ####
+run_ATTR_markov <- function(v_params) {
   with(as.list(v_params), {
    
         #-------------------

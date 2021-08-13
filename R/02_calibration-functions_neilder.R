@@ -10,8 +10,9 @@
 
 ###################  Calibration Specifications  ###################
 
-# Model: 3-State Cancer Relative Survival (CRS) Markov Model
-# Inputs to be calibrated: N1N2_i, N1D_i, N2N3_i, N2D_i, where i = (6, 12, 18, 24) 
+# Model: ATTR Markov Model
+# Inputs to be calibrated: N1N2_i, N1D_i, N2N3_i, N2D_i, where i = (6, 12, 18) 
+# Note: the first NAC landmark KM surves as the basline distribution. THe second as month 6, and so on
 # Targets: prop_N1, prop_N2, prop_N3
 
 # Search method: Random search using Latin-Hypercube Sampling
@@ -119,7 +120,7 @@ v_params_test <- c(p_N1N2_6 = 0.2,
 )
 
 
-test_results <- run_sick_sicker_markov(v_params_test) # It works!
+test_results <- run_ATTR_markov(v_params_test) # It works!
 
 str(test_results)
 
@@ -255,7 +256,7 @@ n_target <- length(v_target_names)
 f_gof <- function(v_params){
 
   # Run model for parametr set "v_params"
-  model_res <- run_sick_sicker_markov(v_params)
+  model_res <- run_ATTR_markov(v_params)
   
   # Calculate goodness-of-fit of model outputs to targets
   v_GOF <- numeric(n_target)
@@ -387,7 +388,7 @@ colnames(m_GOF) <- paste0(v_target_names, "_fit")
 for (j in 1:n_samp){
   
   ###  Run model for a given parameter set  ###
-  model_res <- run_sick_sicker_markov(v_params = m_param_samp[j, ])
+  model_res <- run_ATTR_markov(v_params = m_param_samp[j, ])
   
   
   ###  Calculate goodness-of-fit of model outputs to targets  ###
@@ -444,7 +445,7 @@ plot(m_calib_res[1:100,1],m_calib_res[1:100,2],
 #pairs.panels(m_calib_res[1:100,v_param_names])
 
 ### Plot model-predicted output at best set vs targets ###
-v_out_best <- run_sick_sicker_markov(m_calib_res[1,])
+v_out_best <- run_ATTR_markov(m_calib_res[1,])
 
 
 # TARGET 1: NAC 1 proportion
