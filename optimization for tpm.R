@@ -61,8 +61,8 @@ ofunc_1 <- function(y){
 solution_1 <- optim(par = c(0.01, 0.01), fn = ofunc_1, lower = c(0, 0), upper = c( 1, 1),
                   method = "L-BFGS-B" )
 
-solution_1
-
+y1_1 <- solution_1$par[1]
+y2_1 <- solution_1$par[2]
 ##### 6 - 12 #####
 ofunc_2 <- function(y){
   y1 <- y[1]
@@ -86,7 +86,8 @@ ofunc_2 <- function(y){
 solution_2 <- optim(par = c(0.01, 0.01), fn = ofunc_2, lower = c(0.0, 0.0), upper = c( 1, 1),
                   method = "L-BFGS-B" )
 
-solution_2
+y1_2 <- solution_2$par[1]
+y2_2 <- solution_2$par[2]
 
 ##### 12 - 18 #####
 
@@ -112,5 +113,6 @@ ofunc_3 <- function(y){
 solution_3 <- optim(par = c(0.01, 0.01), fn = ofunc_3, lower = c(0.0, 0.0), upper = c( 1, 1),
                     method = "L-BFGS-B" )
 
-solution_3
+y1_3 <- solution_3$par[1]
+y2_3 <- solution_3$par[2]
 
