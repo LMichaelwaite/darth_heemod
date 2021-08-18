@@ -109,7 +109,7 @@ ofunc_3 <- function(y){
   
 }
 
-solution_3 <- optim(par = c(0.01, 0.01), fn = ofunc_2, lower = c(0.0, 0.0), upper = c( 1, 1),
+solution_3 <- optim(par = c(0.01, 0.01), fn = ofunc_3, lower = c(0.0, 0.0), upper = c( 1, 1),
                     method = "L-BFGS-B" )
 
 solution_3
