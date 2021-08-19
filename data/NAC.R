@@ -343,24 +343,24 @@ target_surv <- list(N1 = target_surv_N1,
 
 # Note: the first NAC landmark KM is used as the baseline distribution. THe second as month 6, and so on
 
-target_dist_N1 <- data.frame(time = c(6, 12, 18), 
-                             value = c(0.46, 0.43, 0.38),
-                             ub = c(0.46, 0.43, 0.38),
-                             lb =  c(0.46, 0.43, 0.38),
+target_dist_N1 <- data.frame(time = c(2, 3, 4), 
+                             value = c(0.43, 0.38, 0.3583),
+                             ub = c(0.43, 0.38, 0.3583),
+                             lb =  c(0.43, 0.38, 0.3583),
                              se = c(0.01, 0.01, 0.01)
 )
 
-target_dist_N2 <- data.frame(time = c(6, 12, 18), 
-                             value = c(0.37, 0.34, 0.38),
-                             ub = c(0.37, 0.34, 0.38),
-                             lb = c(0.37, 0.34, 0.38),
+target_dist_N2 <- data.frame(time = c(2, 3, 4), 
+                             value = c(0.34, 0.3754, 0.376),
+                             ub = c(0.34, 0.3754, 0.376),
+                             lb = c(0.34, 0.3754, 0.376),
                              se = c(0.01, 0.01, 0.01)
 )
 
-target_dist_N3 <- data.frame(time = c(6, 12, 18), 
-                             value = c(0.17, 0.23, 0.24),
-                             ub= c(0.17, 0.23, 0.24),
-                             lb = c(0.17, 0.23, 0.24),
+target_dist_N3 <- data.frame(time = c(2, 3, 4), 
+                             value = c(0.23, 0.24, 0.2657),
+                             ub= c(0.23, 0.24, 0.2657),
+                             lb = c(0.23, 0.24, 0.2657),
                              se = c(0.01, 0.01, 0.01)
 )
 
