@@ -7,204 +7,213 @@ library(dplyr)
 #### ATTR Markov model in a function ####
 run_ATTR_markov <- function(v_params) {
   with(as.list(v_params), {
-   
-        #-------------------
-        #PLACEHOLDERS
-        #....................
-        # HASHED transition intensities are for calibration
-        #FROM N1
-        p_N1N1_6 <- 0.6 
-        p_N1N1_12 <- 0.01
-        p_N1N1_18 <- 0.6
-        p_N1N1_24 <- 0.6
-        p_N1N1_30 <- 0.6
-        p_N1N1_36 <- 0.6
-        
-        #p_N1N2_6 <- 0.2
-        #p_N1N2_12 <- 0.01
-        #p_N1N2_18 <- 0.2
-        #p_N1N2_24 <- 0.2
-        #p_N1N2_30 <- 0.2
-        #p_N1N2_36 <- 0.2
-        
-        p_N1N3_6 <- 0.15
-        p_N1N3_12 <- 0.01
-        p_N1N3_18 <- 0.15
-        p_N1N3_24 <- 0.15
-        p_N1N3_30 <- 0.15
-        p_N1N3_36 <- 0.15
-        
-        #p_N1D_6 <- 0.05
-        #p_N1D_12 <- 0.97
-        #p_N1D_18 <- 0.05
-        #p_N1D_24 <- 0.05
-        #p_N1D_30 <- 0.05
-        #p_N1D_36 <- 0.05
-        
-        #FROM N2
-        p_N2N1_6 <- 0.5
-        p_N2N1_12 <- 0.5
-        p_N2N1_18 <- 0.5
-        p_N2N1_24 <- 0.5
-        p_N2N1_30 <- 0.5
-        p_N2N1_36 <- 0.5
-        
-        p_N2N2_6 <- 0.3
-        p_N2N2_12 <- 0.3
-        p_N2N2_18 <- 0.3
-        p_N2N2_24 <- 0.3
-        p_N2N2_30 <- 0.3
-        p_N2N2_36 <- 0.3
-        
-        #p_N2N3_6 <- 0.15
-        #p_N2N3_12 <- 0.15
-        #p_N2N3_18 <- 0.15
-        #p_N2N3_24 <- 0.15
-        #p_N2N3_30 <- 0.15
-        #p_N2N3_36 <- 0.15
-        
-        #p_N2D_6 <- 0.05
-        #p_N2D_12 <- 0.05
-        #p_N2D_18 <- 0.05
-        #p_N2D_24 <- 0.05
-        #p_N2D_30 <- 0.05
-        #p_N2D_36 <- 0.05
-        
-        #FROM N3
-        p_N3N1_6 <- 0.5
-        p_N3N1_12 <- 0.5
-        p_N3N1_18 <- 0.5
-        p_N3N1_24 <- 0.5
-        p_N3N1_30 <- 0.5
-        p_N3N1_36 <- 0.5
-        
-        p_N3N2_6 <- 0.3
-        p_N3N2_12 <- 0.3
-        p_N3N2_18 <- 0.3
-        p_N3N2_24 <- 0.3
-        p_N3N2_30 <- 0.3
-        p_N3N2_36 <- 0.3
-        
-        p_N3N3_6 <- 0.15
-        p_N3N3_12 <- 0.15
-        p_N3N3_18 <- 0.15
-        p_N3N3_24 <- 0.15
-        p_N3N3_30 <- 0.15
-        p_N3N3_36 <- 0.15
-        
-        p_N3D_6 <- 0.15
-        p_N3D_12 <- 0.15
-        p_N3D_18 <- 0.15
-        p_N3D_24 <- 0.15
-        p_N3D_30 <- 0.15
-        p_N3D_36 <- 0.15
-        
+   # 0 = diagnosis time
+    # time stop 1: 0 - 6
+    # time stop 2: 6 - 12
+    # time stop 3: 12 - 18
+    # time stop 4: 18 - 24
+    
+    #### input parameters to calculate y1 and y2 ####
+    prop_NAC_0 <- data.frame(N1 = 0.4614, N2 = 0.3704, N3 = 0.1783) #prportion in N stages at time 0
+    prop_NAC_1 <- data.frame(N1 = 0.4306, N2 = 0.3403, N3 = 0.2292)
+    prop_NAC_2 <- data.frame(N1 = 0.3843, N2= 0.3754, N3 = 0.2402)
+    prop_NAC_3 <- data.frame(N1 = 0.3583, N2 =  0.3760, N3 = 0.2657)
+    prop_NAC_4 <- data.frame(N1 = 0.3323, N2 =  0.3766, N3 = 0.2911)
+    
+    p_N1D_1 <- 0.002755 # month 0 -6
+    p_N2D_1 <- 0.005372
+    p_N3D_1 <- 0.012067 
+    
+    p_N1D_2 <- 0.00241 # month 6 - 12
+    p_N2D_2 <- 0.0590
+    p_N3D_2 <- 0.1096
+    
+    #p_N1D_3 <- 0.103
+    #p_N2D_3 <- 0.252
+    #p_N3D_3 <- 0.441
+    
+    p_N1D_3 <- 0.051 # month 12 - 18
+    p_N2D_3 <- 0.126
+    p_N3D_3 <- 0.221
+    
+    p_N1D_4 <- 0.061 # month 18 -24
+    p_N2D_4 <- 0.148
+    p_N3D_4 <- 0.260
+    
+    v_D1 <- 0.005291 # proportion dead after timestop 1
+    v_D2 <- 0.055555
+    v_D3 <- 0.120107
+    v_D4 <- 0.137209
+    
+    x0 <- c(prop_NAC_0$N1, prop_NAC_0$N2, prop_NAC_0$N3, 0)    # known values
+    
+    x1 <- c((1-v_D1)*prop_NAC_0$N1, 
+            (1-v_D1)*prop_NAC_0$N2,
+            (1-v_D1)*prop_NAC_0$N3,
+            v_D1
+    )
+    x2 <- c((1-v_D2)*prop_NAC_1$N1, 
+            (1-v_D2)*prop_NAC_1$N2,
+            (1-v_D2)*prop_NAC_1$N3,
+            v_D2
+    )
+    x3 <- c((1-v_D3)*prop_NAC_2$N1, 
+            (1-v_D3)*prop_NAC_2$N2,
+            (1-v_D3)*prop_NAC_2$N3,
+            v_D3
+    )
+    x4 <- c((1-v_D4)*prop_NAC_3$N1, 
+            (1-v_D4)*prop_NAC_3$N2,
+            (1-v_D4)*prop_NAC_3$N3,
+            v_D4
+    )
+    
+    
+    #### calculate y1 and y2 ####
+    #0 -6 
+    ofunc_1 <- function(y){
+      y1 <- y[1]
+      y2 <- y[2]
+      # Manually construct your matrix here using y1, y2 where necessary)
+      Q <- matrix(                      
+        c(1- p_N1D_1 - y1, y1,          0, p_N1D_1, 
+          0, 1 - p_N2D_1 - y2,         y2,  p_N2D_1, 
+          0,                0, 1- p_N3D_1,  p_N3D_1,
+          0,                0,          0, 1.00),
+        ncol =  4,
+        byrow = TRUE     
+      )
+      x1_hat <- t(t(x0) %*% Q)
+      d <- x1_hat - x1
+      
+      return(sum(d * d))
+      
+    }
+    
+    solution_1 <- optim(par = c(0.01, 0.01), fn = ofunc_1, lower = c(0, 0), upper = c( 1, 1),
+                        method = "L-BFGS-B" )
+    
+    p_N1N2_1 <- solution_1$par[1]
+    p_N2N3_1 <- solution_1$par[2]
+    
+    # 6 - 12
+    ofunc_2 <- function(y){
+      y1 <- y[1]
+      y2 <- y[2]
+      # Manually construct your matrix here using y1, y2 where necessary)
+      Q <- matrix(                      
+        c(1- p_N1D_2 - y1, y1,          0, p_N1D_2, 
+          0, 1 - p_N2D_1 - y2,         y2,  p_N2D_2, 
+          0,                0, 1- p_N3D_2,  p_N3D_2,
+          0,                0,          0, 1.00),
+        ncol =  4,
+        byrow = TRUE     
+      )
+      x2_hat <- t(t(x1) %*% Q)
+      d <- x2_hat - x2
+      
+      return(sum(d * d))
+      
+    }
+    
+    solution_2 <- optim(par = c(0.01, 0.01), fn = ofunc_2, lower = c(0.0, 0.0), upper = c( 1, 1),
+                        method = "L-BFGS-B" )
+    
+    p_N1N2_2 <- solution_2$par[1]
+    p_N2N3_2 <- solution_2$par[2]
+    
+    
+    # 12 -18 ACTUAL    
+    
+    ofunc_3 <- function(y){
+      y1 <- y[1]
+      y2 <- y[2]
+      # Manually construct your matrix here using y1, y2 where necessary)
+      Q <- matrix(                      
+        c(1- p_N1D_3 - y1, y1,          0, p_N1D_3, 
+          0, 1 - p_N2D_3 - y2,         y2,  p_N2D_3, 
+          0,                0, 1- p_N3D_3,  p_N3D_3,
+          0,                0,          0, 1.00),
+        ncol =  4,
+        byrow = TRUE     
+      )
+      x3_hat <- t(t(x2) %*% Q)
+      d <- x3_hat - x3
+      
+      return(sum(d * d))
+      
+    }
+    
+    solution_3 <- optim(par = c(0.01, 0.01), fn = ofunc_3, lower = c(0.0, 0.0), upper = c( 1, 1),
+                        method = "L-BFGS-B" )
+    
+    p_N1N2_3 <- solution_3$par[1]
+    p_N2N3_3 <- solution_3$par[2]
+    
+    # 18 - 24
+    
+    ofunc_4 <- function(y){
+      y1 <- y[1]
+      y2 <- y[2]
+      # Manually construct your matrix here using y1, y2 where necessary)
+      Q <- matrix(                      
+        c(1- p_N1D_4 - y1, y1,          0, p_N1D_4, 
+          0, 1 - p_N2D_4 - y2,         y2,  p_N2D_4, 
+          0,                0, 1- p_N3D_4,  p_N3D_4,
+          0,                0,          0, 1.00),
+        ncol =  4,
+        byrow = TRUE     
+      )
+      x4_hat <- t(t(x3) %*% Q)
+      d <- x4_hat - x4
+      
+      return(sum(d * d))
+      
+    }
+    
+    solution_4 <- optim(par = c(0.01, 0.01), fn = ofunc_4, lower = c(0.0, 0.0), upper = c( 1, 1),
+                        method = "L-BFGS-B" )
+    
+    p_N1N2_4 <- solution_4$par[1]
+    p_N2N3_4 <- solution_4$par[2]
+    
         #-----------------------------------------
         #DEFINE PARAMETERS
         #.........................................
         
         param <- define_parameters(
           rr = ifelse(markov_cycle <= 2, .509, 1),
+          
           #FROM N1
-          p_N1N1 = ifelse(markov_cycle <= 6 ,p_N1N1_6,
-                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N1N1_12,
-                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N1N1_18,
-                                        ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N1N1_24,
-                                               ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N1N1_30,
-                                                      ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N1N1_24,
-                                                             p_N1N1_36
-                                                      )))))),
+          p_N1N2 = ifelse(markov_cycle <= 1 ,p_N1N2_1,
+                   ifelse(markov_cycle >= 2 & markov_cycle < 3, p_N1N2_2,
+                   ifelse(markov_cycle >= 3 & markov_cycle < 4, p_N1N2_3,
+                    p_N1N2_4))),  #If greater than 24, then constant at p_N1N2_3. since NAC data only goes to 24.
           
-          p_N1N2 = ifelse(markov_cycle <= 6 ,p_N1N2_6,
-                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N1N2_12,
-                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N1N2_18,
-                                        p_N1N2_18))),                                         #If greater than 18, then constant at p_N1N2_18. since NAC data only goes to 18.
-                                        
-          
-          p_N1N3 = ifelse(markov_cycle <= 6 ,p_N1N3_6,
-                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N1N3_12,
-                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N1N3_18,
-                                        ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N1N3_24,
-                                               ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N1N3_30,
-                                                      ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N1N3_24,
-                                                             p_N1N3_36
-                                                      )))))),
-          
-          p_N1D = ifelse(markov_cycle <= 6 ,p_N1D_6,
-                         ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N1D_12,
-                                ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N1D_18,
-                                       p_N1D_18))),
+          p_N1D = ifelse(markov_cycle <= 1 ,p_N1D_1,
+                  ifelse(markov_cycle >= 2 & markov_cycle < 3, p_N1D_2,
+                  ifelse(markov_cycle >= 3 & markov_cycle < 4, p_N1D_3,
+                  p_N1D_4))),
                                        
-          
-          
           #FROM N2
-          p_N2N1 = ifelse(markov_cycle <= 6 ,p_N2N1_6,
-                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N2N1_12,
-                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N2N1_18,
-                                        ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N2N1_24,
-                                               ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N2N1_30,
-                                                      ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N2N1_24,
-                                                             p_N2N1_36
-                                                      )))))),
-          
-          p_N2N2 = ifelse(markov_cycle <= 6 ,p_N2N2_6,
-                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N2N2_12,
-                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N2N2_18,
-                                        ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N2N2_24,
-                                               ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N2N2_30,
-                                                      ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N2N2_24,
-                                                             p_N2N2_36
-                                                      )))))),
-          
-          p_N2N3 = ifelse(markov_cycle <= 6 ,p_N2N3_6,
-                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N2N3_12,
-                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N2N3_18,
-                                        p_N2N3_18))),
+          p_N2N3 = ifelse(markov_cycle <= 1 ,p_N2N3_1,
+                   ifelse(markov_cycle >= 2 & markov_cycle < 3, p_N2N3_2,
+                   ifelse(markov_cycle >= 3 & markov_cycle < 4, p_N2N3_3,
+                    p_N2N3_4))),
                                         
           
-          p_N2D = ifelse(markov_cycle <= 6 ,p_N2D_6,
-                         ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N2D_12,
-                                ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N2D_18,
-                                       p_N2D_18))),
+          p_N2D = ifelse(markov_cycle <= 1 ,p_N2D_1,
+                  ifelse(markov_cycle >= 2 & markov_cycle < 3, p_N2D_2,
+                  ifelse(markov_cycle >= 3 & markov_cycle < 4, p_N2D_3,
+                  p_N2D_4))),
                                       
-          
           #FROM N3
-          p_N3N1 = ifelse(markov_cycle <= 6 ,p_N3N1_6,
-                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N3N1_12,
-                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N3N1_18,
-                                        ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N3N1_24,
-                                               ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N3N1_30,
-                                                      ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N3N1_24,
-                                                             p_N3N1_36
-                                                      )))))),
+          p_N3D = ifelse(markov_cycle <= 1 ,p_N3D_1,
+                  ifelse(markov_cycle >= 2 & markov_cycle < 3, p_N3D_2,
+                  ifelse(markov_cycle >= 3 & markov_cycle < 4, p_N3D_3,
+                  p_N3D_4))),
           
-          p_N3N2 = ifelse(markov_cycle <= 6 ,p_N3N2_6,
-                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N3N2_12,
-                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N3N2_18,
-                                        ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N3N2_24,
-                                               ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N3N2_30,
-                                                      ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N3N2_24,
-                                                             p_N3N2_36
-                                                      )))))),
-          
-          p_N3N3 = ifelse(markov_cycle <= 6 ,p_N3N3_6,
-                          ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N3N3_12,
-                                 ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N3N3_18,
-                                        ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N3N3_24,
-                                               ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N3N3_30,
-                                                      ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N3N3_24,
-                                                             p_N3N3_36
-                                                      )))))),
-          
-          p_N3D = ifelse(markov_cycle <= 6 ,p_N3D_6,
-                         ifelse(markov_cycle >= 7 & markov_cycle <= 12, p_N3D_12,
-                                ifelse(markov_cycle >= 13 & markov_cycle <= 18, p_N3D_18,
-                                       ifelse(markov_cycle >= 19 & markov_cycle <= 24, p_N3D_24,
-                                              ifelse(markov_cycle >= 25 & markov_cycle <= 30, p_N3D_30,
-                                                     ifelse(markov_cycle >= 31 & markov_cycle <= 36, p_N3D_24,
-                                                            p_N3D_36
-                                                     )))))),  
-          
+          ##### COSTS AND UTILITIES ####                                         
           cost_lami = ifelse(markov_cycle <= 2, 2086.5, 0),
           cost_zido = 2278,
           u_successP = .85,
@@ -216,9 +225,6 @@ run_ATTR_markov <- function(v_params) {
         #-----------------------------------------
         #DEFINE TRANSITION
         #.........................................
-        
-     
-        
         
         mat_bsc <- define_transition(
           state_names = c(
@@ -293,11 +299,11 @@ run_ATTR_markov <- function(v_params) {
           bsc = mod_bsc,
           tafamidis = mod_tafamidis,
           parameters = param,
-          cycles = 60,
+          cycles = 20,
           cost = cost,
           effect = utility,
           method = "beginning",
-          init = c(945, 0, 0, 0)
+          init = c(436, 350, 156, 0)
         )
         summary(res_mod)
 
@@ -330,15 +336,15 @@ run_ATTR_markov <- function(v_params) {
     #create NAC dist. outs
     v_prop_N1 <- nac_dist %>% 
       select(markov_cycle, proportion_N1) %>%
-      filter(markov_cycle %in% c(6, 12, 18))
+      filter(markov_cycle %in% c(2, 3, 4, 5))
     
     v_prop_N2 <- nac_dist %>% 
       select(markov_cycle, proportion_N2) %>%
-      filter(markov_cycle %in% c(6, 12, 18))
+      filter(markov_cycle %in% c(2, 3, 4, 5))
     
     v_prop_N3 <- nac_dist %>% 
       select(markov_cycle, proportion_N3) %>%
-      filter(markov_cycle %in% c(6, 12, 18))
+      filter(markov_cycle %in% c(2, 3, 4, 5))
     
   
     v_prop_N1_use <- as.numeric(unlist(v_prop_N1['proportion_N1']))
@@ -351,6 +357,54 @@ run_ATTR_markov <- function(v_params) {
       select(markov_cycle, proportion_alive)
   
     v_surv_use <- as.numeric(unlist(v_surv['proportion_alive']))
+
+#### plot ####   
+    plot(res_mod, type = "counts", panel = "by_state", free_y = TRUE) +
+      theme_bw() +
+      scale_color_brewer(
+        name = "Strategy",
+        palette = "Set1"
+      )
+    
+    plot(res_mod, type = "counts", panel = "by_strategy") +
+      xlab("Time") +
+      theme_bw() +
+      scale_color_brewer(
+        name = "State",
+        palette = "Set1"
+      )
+    
+    #----------------------------------------------------------
+    #plot survival stuff
+    #-------------------------------------------------------------
+    #plot death state count
+    plot(res_mod, type = "counts", states = "Death", panel = "by_state", free_y = TRUE) +
+      theme_bw() +
+      scale_color_brewer(
+        name = "Strategy",
+        palette = "Set1"
+      )
+    
+    #get state counts
+    c_state <- as.data.frame(get_counts(res_mod))
+    
+    #convert long table into wide table
+    c_state_wide <- pivot_wider(c_state, names_from = state_names, values_from = count) 
+    
+    
+    #create new columns: total_alive & proportion_alive
+    surv_prop <-c_state_wide %>%
+      rowwise() %>%
+      mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+      mutate(proportion_alive = total_alive/rowSums(across(Death:total_alive)))%>% 
+      select(markov_cycle, proportion_alive)
+    
+    #plot surv_prop curve
+    ggplot(data=surv_prop, aes(x=markov_cycle, proportion_alive, group=1)) +
+      geom_line(color="red")+
+      geom_point()
+    
+    ############################################################
     
     
     
