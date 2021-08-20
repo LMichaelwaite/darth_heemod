@@ -213,6 +213,14 @@ run_ATTR_markov <- function(v_params) {
                   ifelse(markov_cycle >= 3 & markov_cycle < 4, p_N3D_3,
                   p_N3D_4))),
           
+          
+          #### TREATMENT EFFECT ####
+          HR = ifelse(markov_cycle <= 1 , 1,
+               ifelse(markov_cycle >= 2 & markov_cycle < 3, 1,
+               ifelse(markov_cycle >= 3 & markov_cycle < 4, 0.7,
+                0.7))),
+          
+          
           ##### COSTS AND UTILITIES ####                                         
           cost_lami = ifelse(markov_cycle <= 2, 2086.5, 0),
           cost_zido = 2278,
@@ -246,9 +254,9 @@ run_ATTR_markov <- function(v_params) {
             "NAC3",
             "Death"
           ),
-          1-(p_N1N2 + p_N1D),                 p_N1N2,           0,  p_N1D,
-                           0,     1- (p_N2N3+ p_N2D),      p_N2N3,  p_N2D,
-                           0,                      0,   1-(p_N3D),  p_N3D,
+          1-(p_N1N2 + p_N1D*HR),                 p_N1N2,           0,  p_N1D*HR,
+                           0,     1- (p_N2N3+ p_N2D*HR),      p_N2N3,  p_N2D*HR,
+                           0,                      0,   1-(p_N3D*HR),  p_N3D*HR,
                            0,                      0,           0,   1.00
         )
         
@@ -303,7 +311,7 @@ run_ATTR_markov <- function(v_params) {
           cost = cost,
           effect = utility,
           method = "beginning",
-          init = c(436, 350, 156, 0)
+          init = c(436, 350, 159, 0)
         )
         summary(res_mod)
 
@@ -388,26 +396,64 @@ run_ATTR_markov <- function(v_params) {
     #get state counts
     c_state <- as.data.frame(get_counts(res_mod))
     
-    #convert long table into wide table
-    c_state_wide <- pivot_wider(c_state, names_from = state_names, values_from = count) 
+    c_state_bsc <- filter(c_state, .strategy_names == "bsc")
+    c_state_tafamidis <- filter(c_state, .strategy_names == "tafamidis")
     
+    
+    c_state_wide_2 <- pivot_wider(c_state_bsc, names_from = state_names, values_from = count)
+    
+#### BSC survival ####
+    #convert long table into wide table
+    c_state_wide <- pivot_wider(c_state, names_from = c(state_names,.strategy_names), values_from = count) 
     
     #create new columns: total_alive & proportion_alive
     surv_prop <-c_state_wide %>%
       rowwise() %>%
+      mutate(total_alive_tafamidis = sum(across(c(NAC1_tafamidis, NAC2_tafamidis, NAC3_tafamidis)), na.rm = T)) %>%
+      mutate(total_dead_tafamidis = Death_tafamidis) %>%
+      mutate(proportion_alive = total_alive_tafamidis/rowSums(across(Death_tafamidis:total_alive_tafamidis)))%>%
+      select(markov_cycle, proportion_alive)
+      surv_prop
+   
+    surv_prop_bsc <- c_state_wide %>%
+      rowwise() %>%
+      mutate(total_alive_bsc = sum(across(c(NAC1_bsc, NAC2_bsc, NAC3_bsc)), na.rm = T)) %>%
+      mutate(proportion_alive = total_alive_bsc/rowSums(across(Death_bsc:total_alive_bsc))) %>%
+      mutate(total_dead_bsc = Death_bsc) %>%  
+      select(markov_cycle, proportion_alive, total_alive_bsc, total_dead_bsc)
+      surv_prop_bsc 
+    
+    surv_prop
+    #plot surv_prop curve
+    ggplot() + 
+      geom_line(data=surv_prop, aes(x=markov_cycle, y=proportion_alive), color='green') + 
+      geom_line(data=surv_prop_bsc, aes(x=markov_cycle, y=proportion_alive), color='red')
+    
+  
+#### tafamidis survival ####
+    #convert long table into wide table
+    c_state_wide_tafamidis <- pivot_wider(c_state_tafamidis, names_from = state_names, values_from = count) 
+    
+    #create new columns: total_alive & proportion_alive
+    surv_prop_tafamidis <-c_state_wide_tafamidis %>%
+      rowwise() %>%
       mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
-      mutate(proportion_alive = total_alive/rowSums(across(Death:total_alive)))%>% 
+      mutate(proportion_alive = total_alive/rowSums(across(Death:total_alive)))%>%
+      mutate(proportion_alive = prop_alive_bsc$surv_prop) %>%
       select(markov_cycle, proportion_alive)
     
     #plot surv_prop curve
-    ggplot(data=surv_prop, aes(x=markov_cycle, proportion_alive, group=1)) +
+    ggplot(data=surv_prop_tafamidis, aes(x=markov_cycle, proportion_alive, group=1)) +
       geom_line(color="red")+
       geom_point()
     
+    
+    
+    
+    
     ############################################################
     
-    
-    
+   
     
     
     ####### RETURN OUTPUT  ###########################################
