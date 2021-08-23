@@ -17,8 +17,11 @@ run_ATTR_markov <- function(v_params) {
     prop_NAC_0 <- data.frame(N1 = 0.4614, N2 = 0.3704, N3 = 0.16825) #prportion in N stages at time 0
     prop_NAC_1 <- data.frame(N1 = 0.4306, N2 = 0.3403, N3 = 0.2292)
     prop_NAC_2 <- data.frame(N1 = 0.3843, N2= 0.3754, N3 = 0.2402)
-    prop_NAC_3 <- data.frame(N1 = 0.4193, N2 =  0.3740, N3 = 0.2068)
+    prop_NAC_3 <- data.frame(N1 = 0.3583, N2 =  0.3760, N3 = 0.2657)
     prop_NAC_4 <- data.frame(N1 = 0.3323, N2 =  0.3766, N3 = 0.2911)
+    
+    #prop_NAC_3 <- data.frame(N1 = 0.4193, N2 =  0.3740, N3 = 0.2068)
+    #prop_NAC_4 <- data.frame(N1 = 0.3323, N2 =  0.3766, N3 = 0.2911)
     
     p_N1D_1 <- 0.002755 # month 0 -6
     p_N2D_1 <- 0.005372
@@ -36,9 +39,9 @@ run_ATTR_markov <- function(v_params) {
     p_N2D_3 <- 0.135174477
     p_N3D_3 <- 0.2525989344
     
-    p_N1D_4 <- 0.05284029638 # month 18 -24
-    p_N2D_4 <- 0.135174477
-    p_N3D_4 <- 0.2525989344
+    p_N1D_4 <- 0.04965 # month 18 -24
+    p_N2D_4 <- 0.12163
+    p_N3D_4 <- 0.21298
     
     v_D1 <- 0.005291 # proportion dead after timestop 1
     v_D2 <- 0.055555
@@ -307,7 +310,7 @@ run_ATTR_markov <- function(v_params) {
           bsc = mod_bsc,
           tafamidis = mod_tafamidis,
           parameters = param,
-          cycles = 20,
+          cycles = 21,
           cost = cost,
           effect = utility,
           method = "beginning",
@@ -341,6 +344,27 @@ run_ATTR_markov <- function(v_params) {
       select(.strategy_names,markov_cycle, proportion_alive, proportion_N1,proportion_N2, proportion_N3)
     
     nac_dist
+    
+    ##### for tafa
+    
+    nac_dist_tafa <-c_state_wide %>%
+      rowwise() %>%
+      mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+      mutate(proportion_alive = total_alive/rowSums(across(Death:total_alive)))%>%
+      mutate(proportion_N1= NAC1/total_alive)%>%
+      mutate(proportion_N2= NAC2/total_alive)%>%
+      mutate(proportion_N3= NAC3/total_alive)%>%
+      filter(.strategy_names =="tafamidis")%>%
+      select(.strategy_names,markov_cycle, proportion_alive, proportion_N1,proportion_N2, proportion_N3)
+    
+    nac_dist_tafa
+    
+    
+    
+    
+    
+    
+    
     #create NAC dist. outs
     v_prop_N1 <- nac_dist %>% 
       select(markov_cycle, proportion_N1) %>%
