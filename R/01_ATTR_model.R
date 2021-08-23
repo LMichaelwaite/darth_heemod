@@ -14,10 +14,10 @@ run_ATTR_markov <- function(v_params) {
     # time stop 4: 18 - 24
     
     #### input parameters to calculate y1 and y2 ####
-    prop_NAC_0 <- data.frame(N1 = 0.4614, N2 = 0.3704, N3 = 0.1783) #prportion in N stages at time 0
+    prop_NAC_0 <- data.frame(N1 = 0.4614, N2 = 0.3704, N3 = 0.16825) #prportion in N stages at time 0
     prop_NAC_1 <- data.frame(N1 = 0.4306, N2 = 0.3403, N3 = 0.2292)
     prop_NAC_2 <- data.frame(N1 = 0.3843, N2= 0.3754, N3 = 0.2402)
-    prop_NAC_3 <- data.frame(N1 = 0.3583, N2 =  0.3760, N3 = 0.2657)
+    prop_NAC_3 <- data.frame(N1 = 0.4193, N2 =  0.3740, N3 = 0.2068)
     prop_NAC_4 <- data.frame(N1 = 0.3323, N2 =  0.3766, N3 = 0.2911)
     
     p_N1D_1 <- 0.002755 # month 0 -6
@@ -32,18 +32,18 @@ run_ATTR_markov <- function(v_params) {
     #p_N2D_3 <- 0.252
     #p_N3D_3 <- 0.441
     
-    p_N1D_3 <- 0.051 # month 12 - 18
-    p_N2D_3 <- 0.126
-    p_N3D_3 <- 0.221
+    p_N1D_3 <- 0.05284029638 # month 12 - 18
+    p_N2D_3 <- 0.135174477
+    p_N3D_3 <- 0.2525989344
     
-    p_N1D_4 <- 0.061 # month 18 -24
-    p_N2D_4 <- 0.148
-    p_N3D_4 <- 0.260
+    p_N1D_4 <- 0.05284029638 # month 18 -24
+    p_N2D_4 <- 0.135174477
+    p_N3D_4 <- 0.2525989344
     
     v_D1 <- 0.005291 # proportion dead after timestop 1
     v_D2 <- 0.055555
-    v_D3 <- 0.120107
-    v_D4 <- 0.137209
+    v_D3 <- 0.131737
+    v_D4 <- 0.124935
     
     x0 <- c(prop_NAC_0$N1, prop_NAC_0$N2, prop_NAC_0$N3, 0)    # known values
     
