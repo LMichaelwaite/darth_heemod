@@ -107,9 +107,11 @@ run_ATTR_markov <- function(v_params) {
           u_NAC_I_tafa = 0.874/2,
           u_NAC_II_tafa = 0.832/2,
           u_NAC_III_tafa = ((0.707 + 0.558)/2)/2,
-          c_tafa = 225000/2, # cost per 6 months; dollars US Kazi
-          c_bsc = 18462/2, # background hc cost 6 months; dollars US Kazi
-          c_hosp = 20219
+          c_tafa = 10840.82*6, # cost per 6 months; GBP; source: NICE tafamidis STA pp. 137
+          c_bsc = 7031.92/2, # GBP; source nuffield trust estimate for health care sepnding on 75 year olds (UK) inflation adjusted to 2020 ((find actual source)) https://www.theguardian.com/society/2016/feb/01/ageing-britain-two-fifths-nhs-budget-spent-over-65s 
+         #c_bsc = 18462/2, # background hc cost 6 months; dollars US Kazi
+          c_hosp = 2536.88, # GBP source: NICE tafamidis STA pp.140
+          c_eol = 9287.86 # # GBP source: NICE tafamidis STA pp.140, end of life costs
         )
         #-----------------------------------------
         #DEFINE TRANSITION
@@ -142,7 +144,7 @@ run_ATTR_markov <- function(v_params) {
           cost_health = 0,
           cost_drugs = dispatch_strategy(
             bsc = c_bsc,
-            tafa = c_tafa
+            tafa = c_tafa + c_bsc
           ),
           cost_hosp = dispatch_strategy(
             bsc = p_hosp * c_hosp,
@@ -165,7 +167,7 @@ run_ATTR_markov <- function(v_params) {
           cost_health = 0,
           cost_drugs = dispatch_strategy(
             bsc = c_bsc,
-            tafa = c_tafa
+            tafa = c_tafa + c_bsc
           ),
           cost_hosp = dispatch_strategy(
             bsc = p_hosp * c_hosp,
@@ -186,7 +188,7 @@ run_ATTR_markov <- function(v_params) {
           cost_health = 0,
           cost_drugs = dispatch_strategy(
             bsc = c_bsc,
-            tafa = c_tafa
+            tafa = c_tafa + c_bsc
           ),
           cost_hosp = dispatch_strategy(
             bsc = p_hosp * c_hosp,
@@ -257,7 +259,23 @@ run_ATTR_markov <- function(v_params) {
         beta <- alpha * (1/mean - 1)
         params<- list(alpha = alpha, beta = beta)
         return(params)
-      }    
+      }  
+      
+      gamma_params <- function (mu, sigma, scale = TRUE)  #function to calculate gamma params from the mean and se
+      {
+        if (scale) {
+          shape <- (mu^2)/(sigma^2)
+          scale <- (sigma^2)/mu
+          params <- list(shape = shape, scale = scale)
+        }
+        else {
+          shape <- (mu^2)/(sigma^2)
+          rate <- mu/(sigma^2)
+          params <- list(shape = shape, rate = rate)
+        }
+        return(params)
+      }
+
       beta_u_NAC_I <-beta_params(mean = .893/2, sigma = .02)
       beta_u_NAC_II <-beta_params(mean = .802/2, sigma = .01)
       beta_u_NAC_III <-beta_params(mean = ((0.706+0.406)/2)/2, sigma = .04)
@@ -266,6 +284,8 @@ run_ATTR_markov <- function(v_params) {
       beta_u_NAC_II_tafa <-beta_params(mean = .832/2, sigma = .01)
       beta_u_NAC_III_tafa <-beta_params(mean = ((0.707+0.558)/2)/2, sigma = .04) 
       
+      gamma_c_hosp <- gamma_params(mu = 2546, sigma = 507.38)
+      
       rsp <- define_psa(
         u_NAC_I ~ beta(beta_u_NAC_I$alpha, beta_u_NAC_I$beta),
         u_NAC_II ~ beta(beta_u_NAC_II$alpha, beta_u_NAC_II$beta),
@@ -273,6 +293,8 @@ run_ATTR_markov <- function(v_params) {
         u_NAC_I_tafa ~ beta(beta_u_NAC_I_tafa$alpha, beta_u_NAC_I_tafa$beta),
         u_NAC_II_tafa ~ beta(beta_u_NAC_II_tafa$alpha, beta_u_NAC_II_tafa$beta),
         u_NAC_III_tafa ~ beta(beta_u_NAC_III_tafa$alpha, beta_u_NAC_III_tafa$beta),
+        
+        disutility_hosp ~ beta(10, 90), # source: https://onlinelibrary.wiley.com/doi/full/10.1002/ehf2.12844
         
         p_N1D_1 ~ beta(1.201171875, 434.7988281),   # alpha = count of events; beta = number at risk - alpha 
         p_N2D_1 ~ beta(1.880274781, 348.1197252),
@@ -290,10 +312,10 @@ run_ATTR_markov <- function(v_params) {
         p_N2D_4 ~ beta(25.703, 185.617),
         p_N3D_4 ~ beta(31.800, 117.510),
       
-        c_tafa ~ gamma(mean = 225000/2, sd = sqrt((225000/2))),
-        c_bsc ~ gamma(mean = 18462/2, sd = sqrt((18462/2))),
+        c_bsc ~ gamma(mean = 7031.92/2, sd = sqrt((7031.92/2))),
+        c_hosp ~ gamma(mean = 2546, sd= 507.38),
         
-        HR ~ beta(12.02719, 4.639787) #from script "estimate beta parameters"
+        HR ~ beta(12.02719, 4.639787), #from script "estimate beta parameters"
         HR_hosp_tafa ~ beta (36.16638, 16.63898)  #from script "estimate beta parameters"
       )
       
@@ -305,7 +327,7 @@ run_ATTR_markov <- function(v_params) {
       )   
       
       summary(pm)
-      plot(pm, type = "ac", max_wtp = 2000000, log_scale = FALSE)        
+      plot(pm, type = "ac", max_wtp = 1000000, log_scale = FALSE)        
       plot(pm, type = "cov")
       plot(pm, type = "cov", diff = TRUE, threshold = 10000)
       plot(pm, type = "ce")
