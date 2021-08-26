@@ -74,15 +74,11 @@ run_ATTR_markov <- function(v_params) {
                   ifelse(markov_cycle >= 3 & markov_cycle < 4, p_N3D_3,
                   p_N3D_4))),
           
-          
+          HR_6 = 0.64,  #HR after month 30, included for OWSA 
           #### TREATMENT EFFECT ####
-          HR = 0.7,
-          
-         # HR = ifelse(markov_cycle <= 1 , 1,
-           #           ifelse(markov_cycle >= 2 & markov_cycle < 3, 1,
-           #                  ifelse(markov_cycle >= 3 & markov_cycle < 4, 0.7,
-            #                        0.7))),
-          
+          HR = ifelse(markov_cycle <= 5 ,0.7,
+                      HR_6),
+
          ##### HOSPITALISATION ####
          # hospitalisation 
          
@@ -117,7 +113,12 @@ run_ATTR_markov <- function(v_params) {
         #DEFINE TRANSITION
         #.........................................
         
-        mat_bsc <- define_transition(
+        mat_bsc <- define_transition(state_names = c(
+          "NAC1",
+          "NAC2",
+          "NAC3",
+          "Death"
+        ),
       
           1-(p_N1N2 + p_N1D),                 p_N1N2,           0,  p_N1D,
                            0,     1- (p_N2N3+ p_N2D),      p_N2N3,  p_N2D,
@@ -125,7 +126,12 @@ run_ATTR_markov <- function(v_params) {
                            0,                      0,           0,   1.00
         )
         
-        mat_tafa <- define_transition(
+        mat_tafa <- define_transition(state_names = c(
+          "NAC1",
+          "NAC2",
+          "NAC3",
+          "Death"
+        ),
          
           1-(p_N1N2 + p_N1D*HR),                 p_N1N2,           0,  p_N1D*HR,
                            0,     1- (p_N2N3+ p_N2D*HR),      p_N2N3,  p_N2D*HR,
@@ -219,18 +225,18 @@ run_ATTR_markov <- function(v_params) {
       
       strat_bsc <- define_strategy(
         transition = mat_bsc,
-        NAC1,
-        NAC2,
-        NAC3,
-        Death
+        NAC1 = NAC1,
+        NAC2 = NAC2,
+        NAC3 = NAC3,
+        Death = Death
       )      
       
       strat_tafa <- define_strategy(
         transition = mat_tafa,
-        NAC1,
-        NAC2,
-        NAC3,
-        Death
+        NAC1 = NAC1,
+        NAC2 = NAC2,
+        NAC3 = NAC3,
+        Death = Death
       )  
       
       res_mod <- run_model(
@@ -334,15 +340,100 @@ run_ATTR_markov <- function(v_params) {
       library(BCEA)
       bcea <- run_bcea(pm, plot = TRUE, Kmax = 1500000)
       
+#########################################################################################
+      ######## OWSA ##############
+#########################################################################################
+
+ ## best case; HR decreases to 0.64 after 30 months (from the ATTR-ACT extension)
+      
+            
+## base case; HR remains constant over time 
+      se <- define_dsa(
+        #u_NAC_I, 0.2, 0.5,
+        #u_NAC_II, 0.2, 0.5,
+        #u_NAC_III, 0.1, 0.5,
+        #u_NAC_I_tafa, 0.2, 0.5,
+        #u_NAC_II_tafa, 0.2, 0.5, 
+        #u_NAC_III_tafa, 0.2, 0.5, 
+        #
+        #disutility_hosp, 0.025, 0.225, 
+        
+        #p_N1D_1, 0, 0.5,     
+        #p_N2D_1, 0, 0.5, 
+        #p_N3D_1, 0, 0.5, 
+        #
+        #p_N1D_2, 0, 0.5, 
+        #p_N2D_2, 0, 0.5, 
+        #p_N3D_2, 0, 0.5, 
+        #
+        #p_N1D_3, 0, 0.5, 
+        #p_N2D_3, 0, 0.5, 
+        #p_N3D_3, 0, 0.5, 
+        #
+        #p_N1D_4, 0, 0.5, 
+        #p_N2D_4, 0, 0.5, 
+        #p_N3D_4, 0, 0.5, 
+        
+        #p_N1D_1, param$p_N1D_1*0.33, param$p_N1D_1*3,     
+        #p_N2D_1, param$p_N2D_1*0.33, param$p_N2D_1*3,
+        #p_N3D_1, param$p_N3D_1*0.33, param$p_N3D_1*3,
+        #
+        #p_N1D_2, param$p_N1D_2*0.33, param$p_N1D_2*3,
+        #p_N2D_2, param$p_N2D_2*0.33, param$p_N2D_2*3,
+        #p_N3D_2, param$p_N3D_2*0.33, param$p_N3D_2*3,
+        #
+        #p_N1D_3, param$p_N1D_3*0.33, param$p_N1D_3*3,
+        #p_N2D_3, param$p_N2D_3*0.33, param$p_N2D_3*3,
+        #p_N3D_3, param$p_N3D_3*0.33, param$p_N3D_3*3,
+        #
+        #p_N1D_4, param$p_N1D_4*0.33, param$p_N1D_4*3,
+        #p_N2D_4, param$p_N2D_4*0.33, param$p_N2D_4*3,
+        #p_N3D_4, param$p_N3D_4*0.33, param$p_N3D_4*3,
+        
+        #c_bsc, (7031.92/2)*0.33, (7031.92/2)*3,
+        #c_hosp,  2546*0.33,  2546*3,
+        c_tafa, 100, 100000
+        
+        #HR, 0.5, 0.9, #from script "estimate beta parameters"
+        #HR_hosp_tafa, 0.45, 0.85  #from script "estimate beta parameters"
+      )
+      
+      res_dsa <- run_dsa(
+        model = res_mod,
+        dsa = se
+      )
+      
+      res_dsa
+      
+      plot(res_dsa,
+           strategy = "tafa",
+           result = "icer",
+           type = "difference")            
+      
+## worse case; HR is zero after month 30      
+      
+      
+      
+      
+      
+      
+      
       
       
       
       
         
-            
+        
+plot(res_dsa,
+     strategy = "tafa",
+     result = "cost",
+     type = "simple")            
       
       
-      
+plot(res_dsa,
+     strategy = "tafa",
+     result = "icer",
+     type = "difference")    
       
       
       
@@ -577,20 +668,64 @@ beta_u_NAC_III_tafa <-beta_params(mean = ((0.707+0.558)/2)/2, sigma = .04)
           mutate(adj_qaly_tafamidis = qaly - disutility_cv_hosp)
         
 
+################################################################################################################        
+## Tables and graphs ##       
+################################################################################################################
+c_n <- sum(c(436, 350, 159, 0))   # cohort size    
+# Tidy data
+#get state counts
+c_state <- as.data.frame(get_counts(res_mod))
+
+#convert long table into wide table
+c_state_wide <- pivot_wider(c_state, names_from = state_names, values_from = count) 
         
+  #### Table 1: state distribution ####
+        #BSC
+        nac_dist <-c_state_wide %>%
+          rowwise() %>%
+          mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+          mutate(proportion_alive = total_alive/rowSums(across(Death:total_alive)))%>%
+          mutate(proportion_N1= NAC1/total_alive)%>%
+          mutate(proportion_N2= NAC2/total_alive)%>%
+          mutate(proportion_N3= NAC3/total_alive)%>%
+          filter(.strategy_names =="bsc")%>%
+          select(.strategy_names,markov_cycle, proportion_alive, proportion_N1,proportion_N2, proportion_N3)
         
+       #Tafmidis
+        nac_dist_tafa <-c_state_wide %>%
+          rowwise() %>%
+          mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+          mutate(proportion_alive = total_alive/rowSums(across(Death:total_alive)))%>%
+          mutate(proportion_N1= NAC1/total_alive)%>%
+          mutate(proportion_N2= NAC2/total_alive)%>%
+          mutate(proportion_N3= NAC3/total_alive)%>%
+          filter(.strategy_names =="tafa")%>%
+          select(.strategy_names,markov_cycle, proportion_alive, proportion_N1,proportion_N2, proportion_N3)
         
+        #View table 1:
+        nac_dist 
+        nac_dist_tafa
         
+  #### Table 2: mean LY ####     
+        #BSC
+        life_years_bsc <-c_state_wide %>%
+          rowwise() %>%
+          mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+          filter(.strategy_names =="bsc")%>%
+          select(.strategy_names,markov_cycle, total_alive)
         
+        avg_life_years_bsc <- sum(life_years_bsc$total_alive/2)/c_n    #c_n cohort size
+        avg_life_years_bsc
         
+        #BSC
+        life_years_tafa <-c_state_wide %>%
+          rowwise() %>%
+          mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+          filter(.strategy_names =="tafa")%>%
+          select(.strategy_names,markov_cycle, total_alive)
         
-        
-        
-        
-        
-        
-        
-        
+        avg_life_years_tafa <- sum(life_years_tafa$total_alive/2)/c_n    #c_n cohort size
+        avg_life_years_tafa
         
         
         
