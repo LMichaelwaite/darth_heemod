@@ -10,7 +10,7 @@ library(dplyr)
 #...............................................................................
 param <- define_parameters(
   
-  fudge_up = 0.025,
+  fudge_up = 0,
   fudge_down = 0,
   p_N1N2_1 = 0.002536125,
   p_N2N3_1 = 0.003078164,
@@ -18,11 +18,11 @@ param <- define_parameters(
   p_N1N2_2 = 0.0905894,
   p_N2N3_2 = 0.2091134,
   
-  p_N1N2_3 = 0.1549904,
-  p_N2N3_3 = 0.08997529,
+  p_N1N2_3 = 0.09210348 ,
+  p_N2N3_3 = 0.06838006,
   
-  p_N1N2_4 = 0.1181116,
-  p_N2N3_4 = 0.09979286,
+  p_N1N2_4 = p_N1N2_3,
+  p_N2N3_4 = p_N1N2_3,
   
   p_N1D_1 = 0.002755 + (fudge_up/15), # month 0 -6
   p_N2D_1 = 0.005372,
@@ -36,13 +36,13 @@ param <- define_parameters(
   #p_N2D_3 = 0.252,
   #p_N3D_3 = 0.441,
   
-  p_N1D_3 = 0.05144 + fudge_up,# month 12 - 18
-  p_N2D_3 = 0.12604,
-  p_N3D_3 = 0.22070,
+  p_N1D_3 = 0.05284029638 + fudge_up,# month 12 - 18
+  p_N2D_3 = 0.135174477,
+  p_N3D_3 = 0.2525989344,
   
-  p_N1D_4 = 0.04965, # month 18 -24
-  p_N2D_4 = 0.12163,
-  p_N3D_4 = 0.21298,
+  p_N1D_4 = p_N1D_3, # month 18 -24
+  p_N2D_4 = p_N2D_3,
+  p_N3D_4 = p_N3D_3,
   #p_N3D_4 = 0.23,
   #FROM N1
   p_N1N2 = ifelse(markov_cycle <= 1 ,p_N1N2_1,
@@ -305,6 +305,12 @@ rsp <- define_psa(
   
   HR ~ beta(12.02719, 4.639787), #from script "estimate beta parameters"
   HR_hosp_tafa ~ beta (36.16638, 16.63898)  #from script "estimate beta parameters"
+  
+  #TO add:
+  #p_N1N2
+  #p_N2N3
+  #HR_6
+  #c_bsc
 )
 
 #"run_psa" is masked from dampack, must specify heemod
@@ -494,11 +500,12 @@ values_tafa_wide <- pivot_wider(df_values_tafa, names_from = value_names, values
 avg_qaly_bsc <-  sum(values_bsc_wide$qaly_total)/c_n        
 avg_ly_bsc <-  sum(values_bsc_wide$life_year)/c_n        
 avg_cost_bsc <-  sum(values_bsc_wide$cost_total)/c_n         
-        
+avg_cost_hosp_bsc <- sum(values_bsc_wide$cost_hosp)/c_n
+
 avg_qaly_tafa <-  sum(values_tafa_wide$qaly_total)/c_n        
 avg_ly_tafa <-  sum(values_tafa_wide$life_year)/c_n        
 avg_cost_tafa <-  sum(values_tafa_wide$cost_total)/c_n         
-
+avg_cost_hosp_tafa <- sum(values_tafa_wide$cost_hosp)/c_n
 
 avg_drug_cost_tafa <- sum(values_tafa_wide$cost_drugs)/c_n
 
@@ -508,7 +515,9 @@ result_summary <- data.frame(QALY_tafa =  avg_qaly_tafa,
                              Life_years_bsc = avg_ly_bsc,
                              cost_tafa =  avg_cost_tafa,
                              cost_bsc = avg_cost_bsc,
-                             drug_cost_tafa = avg_drug_cost_tafa)       
+                             drug_cost_tafa = avg_drug_cost_tafa,
+                             hosp_cost_tafa = avg_cost_hosp_tafa,
+                             hosp_cost_bsc = avg_cost_hosp_bsc )       
 result_summary        
         
         

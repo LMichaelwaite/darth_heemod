@@ -2,15 +2,14 @@
 # 0 = diagnosis time
 # time stop 1: 0 - 6
 # time stop 2: 6 - 12
-# time stop 3: 12 - 18
-# time stop 4: 18 - 24
+# time stop 3: 12 - 24
+
 
 #### input parameters to calculate y1 and y2 ####
 prop_NAC_0 <- data.frame(N1 = 0.4614, N2 = 0.3704, N3 = 0.16825) #prportion in N stages at time 0
 prop_NAC_1 <- data.frame(N1 = 0.4306, N2 = 0.3403, N3 = 0.2292)
 prop_NAC_2 <- data.frame(N1 = 0.3843, N2= 0.3754, N3 = 0.2402)
-prop_NAC_3 <- data.frame(N1 = 0.3583, N2 =  0.3760, N3 = 0.2657)
-prop_NAC_4 <- data.frame(N1 = 0.3323, N2 =  0.3766, N3 = 0.2911)
+
 
 #prop_NAC_3 <- data.frame(N1 = 0.4193, N2 =  0.3740, N3 = 0.2068)
 #prop_NAC_4 <- data.frame(N1 = 0.3323, N2 =  0.3766, N3 = 0.2911)
@@ -27,18 +26,14 @@ p_N3D_2 <- 0.1096
 #p_N2D_3 <- 0.252
 #p_N3D_3 <- 0.441
 
-p_N1D_3 <- 0.05144 # month 12 - 18
-p_N2D_3 <- 0.12604
-p_N3D_3 <- 0.22070
-
-p_N1D_4 <- 0.04965 # month 18 -24
-p_N2D_4 <- 0.12163
-p_N3D_4 <- 0.21298
+p_N1D_3 <- 0.05284029638 # month 12 - 24
+p_N2D_3 <- 0.135174477
+p_N3D_3 <- 0.2525989344
 
 v_D1 <- 0.005291 # proportion dead after timestop 1
 v_D2 <- 0.055555
-v_D3 <- 0.131737
-v_D4 <- 0.124935
+v_D3 <- 0.240214
+
 
 x0 <- c(prop_NAC_0$N1, prop_NAC_0$N2, prop_NAC_0$N3, 0)    # known values
 
@@ -56,11 +51,6 @@ x3 <- c((1-v_D3)*prop_NAC_2$N1,
         (1-v_D3)*prop_NAC_2$N2,
         (1-v_D3)*prop_NAC_2$N3,
         v_D3
-)
-x4 <- c((1-v_D4)*prop_NAC_3$N1, 
-        (1-v_D4)*prop_NAC_3$N2,
-        (1-v_D4)*prop_NAC_3$N3,
-        v_D4
 )
 
 
@@ -118,7 +108,7 @@ p_N1N2_2 <- solution_2$par[1]
 p_N2N3_2 <- solution_2$par[2]
 
 
-# 12 -18 ACTUAL    
+# 12 - 24 ACTUAL    
 
 ofunc_3 <- function(y){
   y1 <- y[1]
@@ -145,35 +135,22 @@ solution_3 <- optim(par = c(0.01, 0.01), fn = ofunc_3, lower = c(0.0, 0.0), uppe
 p_N1N2_3 <- solution_3$par[1]
 p_N2N3_3 <- solution_3$par[2]
 
-# 18 - 24
 
-ofunc_4 <- function(y){
-  y1 <- y[1]
-  y2 <- y[2]
-  # Manually construct your matrix here using y1, y2 where necessary)
-  Q <- matrix(                      
-    c(1- p_N1D_4 - y1, y1,          0, p_N1D_4, 
-      0, 1 - p_N2D_4 - y2,         y2,  p_N2D_4, 
-      0,                0, 1- p_N3D_4,  p_N3D_4,
-      0,                0,          0, 1.00),
-    ncol =  4,
-    byrow = TRUE     
-  )
-  x4_hat <- t(t(x3) %*% Q)
-  d <- x4_hat - x4
-  
-  return(sum(d * d))
-  
+##### convert 12 month probability to 6 month probability ####
+
+rescale_prob <- function (p, to = 1, from = 1) 
+{
+  stopifnot(p >= 0, p <= 1, to > 0, from > 0)
+  r <- -log(1 - p)/from
+  rate_to_prob(r, to = to)
 }
 
-solution_4 <- optim(par = c(0.01, 0.01), fn = ofunc_4, lower = c(0.0, 0.0), upper = c( 1, 1),
-                    method = "L-BFGS-B" )
-
-p_N1N2_4 <- solution_4$par[1]
-p_N2N3_4 <- solution_4$par[2]
-
+p_N1N2_3 <- rescale_prob(p_N1N2_3, to = 0.5, from = 1)
+p_N2N3_3 <- rescale_prob(p_N2N3_3, to = 0.5, from = 1)
 
 summary_NiD <- data.frame(p_N1N2_1, p_N2N3_1,
                           p_N1N2_2, p_N2N3_2,
-                          p_N1N2_3, p_N2N3_3,
-                          p_N1N2_4, p_N2N3_4)
+                          p_N1N2_3, p_N2N3_3)
+
+
+
