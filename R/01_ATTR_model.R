@@ -89,8 +89,6 @@ param <- define_parameters(
   disutility_hosp = 0.10, # https://onlinelibrary.wiley.com/doi/full/10.1002/ehf2.12844
   
   #### COSTS AND UTILITIES ####                                         
-  #cost_lami = ifelse(markov_cycle <= 2, 2086.5, 0),
-  # cost_zido = 2278,
   #divde by two due to 6 month cycle
   u_NAC_I = 0.893/2,
   u_NAC_II = 0.802/2,
@@ -245,7 +243,6 @@ plot(res_mod, type = "ce") # CE frontier
 #-------------------------------------------------------------------------------
 #                                  PSA
 #...............................................................................
-
 beta_params <- function (mean, sigma) #function to calculate beta params from the mean and se
 {
   alpha <- ((1 - mean)/sigma^2 - 1/mean) * mean^2
@@ -403,10 +400,8 @@ c_n <- sum(c(436, 350, 159, 0))   # cohort size
 
 # Tidy data
 #get state counts
-c_state <- as.data.frame(get_counts(res_mod))
-
-#convert long table into wide table
-c_state_wide <- pivot_wider(c_state, names_from = state_names, values_from = count) 
+c_state <- as.data.frame(get_counts(res_mod)) 
+c_state_wide <- pivot_wider(c_state, names_from = state_names, values_from = count) #convert long table into wide table
 
 #### Table 1: state distribution ####
 #BSC
@@ -435,44 +430,70 @@ nac_dist_tafa <-c_state_wide %>%
 nac_dist 
 nac_dist_tafa
 
-#### Table 2: mean LY ####     
+#### Table 2: mean LY ####    EDIT: better approach in table 3 
 #BSC
-life_years_bsc <-c_state_wide %>%
-  rowwise() %>%
-  mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
-  filter(.strategy_names =="bsc")%>%
-  select(.strategy_names,markov_cycle, total_alive)
+#life_years_bsc <-c_state_wide %>%
+#  rowwise() %>%
+#  mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+#  filter(.strategy_names =="bsc")%>%
+#  select(.strategy_names,markov_cycle, total_alive)
+#
+#avg_life_years_bsc <- sum(life_years_bsc$total_alive/2)/c_n    #c_n cohort size
+#avg_life_years_bsc
+#
+##BSC
+#life_years_tafa <-c_state_wide %>%
+#  rowwise() %>%
+#  mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+#  filter(.strategy_names =="tafa")%>%
+#  select(.strategy_names,markov_cycle, total_alive)
+#
+#avg_life_years_tafa <- sum(life_years_tafa$total_alive/2)/c_n    #c_n cohort size
+#avg_life_years_tafa
 
-avg_life_years_bsc <- sum(life_years_bsc$total_alive/2)/c_n    #c_n cohort size
-avg_life_years_bsc
+#### Table 3: mean QALYs ##### 
+#### Prepare data: value total by cycle 
+df_values <- as.data.frame(get_values(res_mod))
+df_values_bsc <- df_values %>% # BSC
+  filter(.strategy_names =="bsc") 
+df_values_tafa <- df_values %>% # Tafa
+  filter(.strategy_names =="tafa") 
 
-#BSC
-life_years_tafa <-c_state_wide %>%
-  rowwise() %>%
-  mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
-  filter(.strategy_names =="tafa")%>%
-  select(.strategy_names,markov_cycle, total_alive)
+values_bsc_wide <- pivot_wider(df_values_bsc, names_from = value_names, values_from = value)
+values_tafa_wide <- pivot_wider(df_values_tafa, names_from = value_names, values_from = value)
 
-avg_life_years_tafa <- sum(life_years_tafa$total_alive/2)/c_n    #c_n cohort size
-avg_life_years_tafa
-
-
-
-
-
-
+#### create column: cohort size per cycle
+#c_alive_bsc <-c_state_wide %>%
+#  rowwise() %>%
+#  mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+#  filter(.strategy_names =="bsc")%>%
+#  select(total_alive)
+#
+#c_alive_tafa <-c_state_wide %>%
+#  rowwise() %>%
+#  mutate(total_alive = sum(across(starts_with("NAC")), na.rm = T)) %>%
+#  filter(.strategy_names =="tafa")%>%
+#  select(total_alive)
+#
+#values_bsc <- cbind(values_bsc_wide, c_alive_bsc)
+#values_tafa <- cbind(values_tafa_wide, c_alive_tafa)        
         
+#### Calculate avg values ####        
+avg_qaly_bsc <-  sum(values_bsc_wide$qaly_total)/c_n        
+avg_ly_bsc <-  sum(values_bsc_wide$life_year)/c_n        
+avg_cost_bsc <-  sum(values_bsc_wide$cost_total)/c_n         
         
+avg_qaly_tafa <-  sum(values_tafa_wide$qaly_total)/c_n        
+avg_ly_tafa <-  sum(values_tafa_wide$life_year)/c_n        
+avg_cost_tafa <-  sum(values_tafa_wide$cost_total)/c_n         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
+result_summary <- data.frame(QALY_tafa =  avg_qaly_tafa,
+                             QALY_bsc =  avg_qaly_bsc,
+                             Life_years_tafa = avg_ly_tafa,
+                             Life_years_bsc = avg_ly_bsc,
+                             cost_tafa =  avg_cost_tafa,
+                             cost_bsc = avg_cost_bsc)       
+result_summary        
         
         
         
