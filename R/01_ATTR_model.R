@@ -9,6 +9,9 @@ library(dplyr)
 #                              DEFINE PARAMETERS
 #...............................................................................
 param <- define_parameters(
+  
+  fudge_up = 0.025,
+  fudge_down = 0,
   p_N1N2_1 = 0.002536125,
   p_N2N3_1 = 0.003078164,
   
@@ -21,11 +24,11 @@ param <- define_parameters(
   p_N1N2_4 = 0.1181116,
   p_N2N3_4 = 0.09979286,
   
-  p_N1D_1 = 0.002755, # month 0 -6
+  p_N1D_1 = 0.002755 + (fudge_up/15), # month 0 -6
   p_N2D_1 = 0.005372,
   p_N3D_1 = 0.012067, 
   
-  p_N1D_2 = 0.00241 ,# month 6 - 12
+  p_N1D_2 = 0.00241 + fudge_up, # month 6 - 12
   p_N2D_2 = 0.0590,
   p_N3D_2 = 0.1096,
   
@@ -33,14 +36,14 @@ param <- define_parameters(
   #p_N2D_3 = 0.252,
   #p_N3D_3 = 0.441,
   
-  p_N1D_3 = 0.05144 ,# month 12 - 18
+  p_N1D_3 = 0.05144 + fudge_up,# month 12 - 18
   p_N2D_3 = 0.12604,
   p_N3D_3 = 0.22070,
   
-  p_N1D_4 = 0.04965 ,# month 18 -24
+  p_N1D_4 = 0.04965, # month 18 -24
   p_N2D_4 = 0.12163,
   p_N3D_4 = 0.21298,
-  
+  #p_N3D_4 = 0.23,
   #FROM N1
   p_N1N2 = ifelse(markov_cycle <= 1 ,p_N1N2_1,
            ifelse(markov_cycle >= 2 & markov_cycle < 3, p_N1N2_2,
@@ -138,17 +141,15 @@ plot(mat_tafa) #model diagram
 #           DEFINE strategy & state dependent costs and utilities
 #...............................................................................
 NAC1 <- define_state(
-  cost_health = 0,
+  cost_background_health = c_bsc,
   cost_drugs = dispatch_strategy(
-    bsc = c_bsc,
-    tafa = c_tafa + c_bsc
+    bsc = 0,
+    tafa = c_tafa
   ),
   cost_hosp = dispatch_strategy(
     bsc = p_hosp * c_hosp,
     tafa = p_hosp_tafa* c_hosp),
-  
-  cost_total = discount(cost_health + cost_drugs + cost_hosp, .03),
-  
+  cost_total = discount(cost_background_health + cost_drugs + cost_hosp, .03),
   qaly = dispatch_strategy(
     bsc = u_NAC_I,
     tafa = u_NAC_I_tafa
@@ -156,21 +157,19 @@ NAC1 <- define_state(
   cv_hosp_disutility = dispatch_strategy(
     bsc = p_hosp * disutility_hosp,
     tafa = p_hosp_tafa* disutility_hosp),
-  
   qaly_total =  discount(qaly-cv_hosp_disutility, 0.0),
   life_year = 0.5
 )
 NAC2 <- define_state(
-  cost_health = 0,
+  cost_background_health = c_bsc,
   cost_drugs = dispatch_strategy(
-    bsc = c_bsc,
-    tafa = c_tafa + c_bsc
+    bsc = 0,
+    tafa = c_tafa
   ),
   cost_hosp = dispatch_strategy(
     bsc = p_hosp * c_hosp,
     tafa = p_hosp_tafa* c_hosp),
-  cost_total = discount(cost_health + cost_drugs + cost_hosp, .03),
-  
+  cost_total = discount(cost_background_health + cost_drugs + cost_hosp, .03),
   qaly = dispatch_strategy(
     bsc = u_NAC_II,
     tafa = u_NAC_II_tafa
@@ -182,16 +181,15 @@ NAC2 <- define_state(
   life_year = 0.5
 )
 NAC3 <- define_state(
-  cost_health = 0,
+  cost_background_health = c_bsc,
   cost_drugs = dispatch_strategy(
-    bsc = c_bsc,
-    tafa = c_tafa + c_bsc
+    bsc = 0,
+    tafa = c_tafa
   ),
   cost_hosp = dispatch_strategy(
     bsc = p_hosp * c_hosp,
     tafa = p_hosp_tafa* c_hosp),
-  cost_total = discount(cost_health + cost_drugs + cost_hosp, .03),
-  
+  cost_total = discount(cost_background_health + cost_drugs + cost_hosp, .03),
   qaly = dispatch_strategy(
     bsc = u_NAC_III,
     tafa = u_NAC_III_tafa
@@ -203,10 +201,10 @@ NAC3 <- define_state(
   life_year = 0.5
 )
 Death <- define_state(
-  cost_health = 0,
+  cost_background_health = 0,
   cost_drugs = 0,
   cost_hosp =0,
-  cost_total = discount(cost_health + cost_drugs + cost_hosp, .03),
+  cost_total = discount(cost_background_health + cost_drugs + cost_hosp, .03),
   qaly = 0,
   cv_hosp_disutility = 0,
   qaly_total =  discount(qaly - cv_hosp_disutility, 0.0),
@@ -232,7 +230,8 @@ res_mod <- run_model(
   parameters = param,
   cycles = 21,
   cost = cost_total,
-  effect = qaly_total,
+  #effect = qaly_total,
+  effect = life_year,
   method = "end",
   init = c(436, 350, 159, 0)
 )
@@ -336,25 +335,29 @@ se <- define_dsa(
   #u_NAC_I_tafa, 0.2, 0.5,
   #u_NAC_II_tafa, 0.2, 0.5, 
   #u_NAC_III_tafa, 0.2, 0.5, 
-  #
-  #disutility_hosp, 0.025, 0.225, 
   
-  #p_N1D_1, 0, 0.5,     
-  #p_N2D_1, 0, 0.5, 
-  #p_N3D_1, 0, 0.5, 
-  #
-  #p_N1D_2, 0, 0.5, 
-  #p_N2D_2, 0, 0.5, 
-  #p_N3D_2, 0, 0.5, 
-  #
-  #p_N1D_3, 0, 0.5, 
-  #p_N2D_3, 0, 0.5, 
-  #p_N3D_3, 0, 0.5, 
-  #
-  #p_N1D_4, 0, 0.5, 
-  #p_N2D_4, 0, 0.5, 
-  #p_N3D_4, 0, 0.5, 
+  fudge_up, 0.01, 0.1,
   
+  disutility_hosp, 0.025, 0.225, 
+
+  p_N1D_1, 0, 0.5,     
+  p_N2D_1, 0, 0.5, 
+  p_N3D_1, 0, 0.5, 
+  
+  p_N1D_2, 0, 0.5, 
+  p_N2D_2, 0, 0.5, 
+  p_N3D_2, 0, 0.5, 
+  
+  p_N1D_3, 0, 0.5, 
+  p_N2D_3, 0, 0.5, 
+  p_N3D_3, 0, 0.5, 
+  
+  p_N1D_4, 0, 0.5, 
+  p_N2D_4, 0, 0.5, 
+  p_N3D_4, 0, 0.5, 
+
+  p_N2N3_3, 0, 0.1,
+  p_N2N3_4, 0, 0.11,
   #p_N1D_1, param$p_N1D_1*0.33, param$p_N1D_1*3,     
   #p_N2D_1, param$p_N2D_1*0.33, param$p_N2D_1*3,
   #p_N3D_1, param$p_N3D_1*0.33, param$p_N3D_1*3,
@@ -370,9 +373,9 @@ se <- define_dsa(
   #p_N1D_4, param$p_N1D_4*0.33, param$p_N1D_4*3,
   #p_N2D_4, param$p_N2D_4*0.33, param$p_N2D_4*3,
   #p_N3D_4, param$p_N3D_4*0.33, param$p_N3D_4*3,
-  
-  #c_bsc, (7031.92/2)*0.33, (7031.92/2)*3,
-  #c_hosp,  2546*0.33,  2546*3,
+
+  c_bsc, (7031.92/2)*0.33, (7031.92/2)*3,
+  c_hosp,  2546*0.33,  2546*3,
   c_tafa, 100, 100000
   
   #HR, 0.5, 0.9, #from script "estimate beta parameters"
@@ -388,9 +391,18 @@ res_dsa
 
 plot(res_dsa,
      strategy = "tafa",
-     result = "icer",
-     type = "difference")            
+     result = "effect",
+     type = "difference")  
 
+plot(res_dsa, 
+     strategy = "bsc",
+     result = "effect",
+     type = "simple")
+
+plot(res_dsa, 
+     strategy = "tafa",
+     result = "effect",
+     type = "simple")
 ## worse case; HR is zero after month 30      
     
 #-------------------------------------------------------------------------------
@@ -486,13 +498,17 @@ avg_cost_bsc <-  sum(values_bsc_wide$cost_total)/c_n
 avg_qaly_tafa <-  sum(values_tafa_wide$qaly_total)/c_n        
 avg_ly_tafa <-  sum(values_tafa_wide$life_year)/c_n        
 avg_cost_tafa <-  sum(values_tafa_wide$cost_total)/c_n         
-        
+
+
+avg_drug_cost_tafa <- sum(values_tafa_wide$cost_drugs)/c_n
+
 result_summary <- data.frame(QALY_tafa =  avg_qaly_tafa,
                              QALY_bsc =  avg_qaly_bsc,
                              Life_years_tafa = avg_ly_tafa,
                              Life_years_bsc = avg_ly_bsc,
                              cost_tafa =  avg_cost_tafa,
-                             cost_bsc = avg_cost_bsc)       
+                             cost_bsc = avg_cost_bsc,
+                             drug_cost_tafa = avg_drug_cost_tafa)       
 result_summary        
         
         
