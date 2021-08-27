@@ -4,7 +4,7 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 
-#### ATTR Markov model in a function ####
+#### ATTR_CM Markov model ####
 #-------------------------------------------------------------------------------
 #                              DEFINE PARAMETERS
 #...............................................................................
@@ -90,7 +90,7 @@ param <- define_parameters(
   
   #### COSTS AND UTILITIES ####                                         
   #divde by two due to 6 month cycle
-  u_NAC_I = 0.893/2,
+  u_NAC_I = 0.893/2, # Source: Rozenbaum NYHA utilities. Assume NYHA I = NAC I,..., AVG(NYHA_III, NYHA_IV) = NAC_III
   u_NAC_II = 0.802/2,
   u_NAC_III = ((0.706 + 0.406)/2)/2, 
   u_NAC_I_tafa = 0.874/2,
@@ -451,7 +451,7 @@ nac_dist_tafa
 #avg_life_years_tafa <- sum(life_years_tafa$total_alive/2)/c_n    #c_n cohort size
 #avg_life_years_tafa
 
-#### Table 3: mean QALYs ##### 
+#### Table 3: mean outcomes ##### 
 #### Prepare data: value total by cycle 
 df_values <- as.data.frame(get_values(res_mod))
 df_values_bsc <- df_values %>% # BSC
@@ -478,7 +478,7 @@ values_tafa_wide <- pivot_wider(df_values_tafa, names_from = value_names, values
 #values_bsc <- cbind(values_bsc_wide, c_alive_bsc)
 #values_tafa <- cbind(values_tafa_wide, c_alive_tafa)        
         
-#### Calculate avg values ####        
+#### Calculate mean values ####        
 avg_qaly_bsc <-  sum(values_bsc_wide$qaly_total)/c_n        
 avg_ly_bsc <-  sum(values_bsc_wide$life_year)/c_n        
 avg_cost_bsc <-  sum(values_bsc_wide$cost_total)/c_n         
