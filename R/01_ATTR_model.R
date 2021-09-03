@@ -93,17 +93,36 @@ param <- define_parameters(
   
   #### COSTS AND UTILITIES ####  
   
-  # EXPERT ELLICITATION: weighting for NYHA to NAC
-  # NAC: 
-  #divde by two due to 6 month cycle
-  u_NAC_I = 0.893/2, # Source: Rozenbaum NYHA utilities. Assume NYHA I = NAC I,..., AVG(NYHA_III, NYHA_IV) = NAC_III
-  u_NAC_II = 0.802/2,
-  u_NAC_III = (0.7*0.706+0.3*0.406)/2, 
-  u_NAC_I_tafa = 0.874/2,
-  u_NAC_II_tafa = 0.832/2,
-  u_NAC_III_tafa = (0.7*0.707 + 0.3*0.558)/2,
+  # weighting for NYHA to NAC
+  #divide all annual figures by two due to 6 month cycle
+  u_NYHA_I = 0.893, # Source: Rozenbaum NYHA utilities.
+  u_NYHA_II = 0.802,
+  u_NYHA_III = 0.706,
+  u_NYHA_IV = 0.406, 
+
+  u_NYHA_I_tafa = 0.874,
+  u_NYHA_II_tafa = 0.832,
+  u_NYHA_III_tafa = 0.707, 
+  u_NYHA_IV_tafa = 0.558,
+  
+  u_NAC_I = (0.4 * u_NYHA_I + 0.6 *  u_NYHA_II)/2,   
+  u_NAC_II = (0.4 * u_NYHA_II + 0.6 *  u_NYHA_III)/2,
+  u_NAC_III =  (0.8 * u_NYHA_III + 0.2 *  u_NYHA_IV)/2,
+  u_NAC_I_tafa = (0.4 * u_NYHA_I_tafa + 0.6 *  u_NYHA_II_tafa)/2,
+  u_NAC_II_tafa = (0.4 * u_NYHA_II_tafa + 0.6 *  u_NYHA_III_tafa)/2,
+  u_NAC_III_tafa = (0.8 * u_NYHA_III_tafa + 0.2 *  u_NYHA_IV_tafa)/2,
+  
+  c_NYHA_I = 2532.28, # https://doi.org/10.1007/s10389-011-0452-0 # Inflation adjusted from 2009 to 2020. Converted from EUR to GBP at 2020 conversion rate
+  c_NYHA_II = 2887.45,
+  c_NYHA_III = 3757.47,
+  c_NYHA_IV = 4323.50,
+
+  c_NAC_I = (0.4* c_NYHA_I + 0.6*c_NYHA_II)/2,
+  c_NAC_II = (0.4* c_NYHA_II + 0.6*c_NYHA_III)/2,
+  c_NAC_III = (0.8* c_NYHA_III + 0.2*c_NYHA_IV)/2,
+  
   c_tafa = 10840.82*6, # cost per 6 months; GBP; source: NICE tafamidis STA pp. 137
-  c_bsc = 7031.92/2, # GBP; source nuffield trust estimate for health care sepnding on 75 year olds (UK) inflation adjusted to 2020 ((find actual source)) https://www.theguardian.com/society/2016/feb/01/ageing-britain-two-fifths-nhs-budget-spent-over-65s 
+  #c_bsc = 7031.92/2, # GBP; source nuffield trust estimate for health care sepnding on 75 year olds (UK) inflation adjusted to 2020 ((find actual source)) https://www.theguardian.com/society/2016/feb/01/ageing-britain-two-fifths-nhs-budget-spent-over-65s 
   #c_bsc = 18462/2, # background hc cost 6 months; dollars US Kazi
   c_hosp = 2536.88, # GBP source: NICE tafamidis STA pp.140
   c_eol = 9287.86, # # GBP source: NICE tafamidis STA pp.140, end of life costs
@@ -146,7 +165,7 @@ plot(mat_tafa) #model diagram
 #...............................................................................
 R <- (1+0.03)^(1/3) - 1
 NAC1 <- define_state(
-  cost_background_health = discount(c_bsc, R),
+  cost_background_health = discount(c_NYHA_I, R),
   cost_drugs = discount(dispatch_strategy(
       bsc = 0,
       tafa = c_tafa, 
@@ -167,7 +186,7 @@ NAC1 <- define_state(
   life_year = discount(0.5, R)
 )
 NAC2 <- define_state(
-  cost_background_health = discount(c_bsc, R),
+  cost_background_health = discount(c_NYHA_II, R),
   cost_drugs = discount(dispatch_strategy(
         bsc = 0,
         tafa = c_tafa, 
@@ -188,7 +207,7 @@ NAC2 <- define_state(
   life_year = discount(0.5, R)
 )
 NAC3 <- define_state(
-  cost_background_health = discount(c_bsc, R),
+  cost_background_health = discount(c_NYHA_III, R),
   cost_drugs = discount(dispatch_strategy(
     bsc = 0,
     tafa = c_tafa, 
@@ -291,7 +310,6 @@ rsp <- define_psa(
   u_NAC_III_tafa ~ beta(beta_u_NAC_III_tafa$alpha, beta_u_NAC_III_tafa$beta),
   
   disutility_hosp ~ beta(10, 90), # source: https://onlinelibrary.wiley.com/doi/full/10.1002/ehf2.12844
-  
   p_N1N2_1 ~ beta(param$p_N1N2_1, param$p_N1N2_1*0.15),
   p_N2N3_1 ~ beta(param$p_N2N3_1, param$p_N2N3_1*0.15),
   p_N1N2_2 ~ beta(param$p_N1N2_2, param$p_N1N2_2*0.15),
@@ -344,7 +362,14 @@ plot(pm, type = "ce")
 #                                   OWSA
 #...............................................................................
 ## best case; HR decreases to 0.64 after 30 months (from the ATTR-ACT extension)
-      
+
+## price of tafa
+se_price <- define_dsa(
+  c_tafa, 100, 100000
+  
+)
+  
+
 ## base case; HR remains constant over time 
 se <- define_dsa(
   #u_NAC_I, 0.2, 0.5,
@@ -354,30 +379,30 @@ se <- define_dsa(
   #u_NAC_II_tafa, 0.2, 0.5, 
   #u_NAC_III_tafa, 0.2, 0.5, 
   
-  fudge_up, 0.01, 0.1,
+  #fudge_up, 0.01, 0.1,
   
-  disutility_hosp, 0.025, 0.225, 
+  #disutility_hosp, 0.025, 0.225, 
 
-  p_N1D_1, 0, 0.5,     
-  p_N2D_1, 0, 0.5, 
-  p_N3D_1, 0, 0.5, 
-  
-  p_N1D_2, 0, 0.5, 
-  p_N2D_2, 0, 0.5, 
-  p_N3D_2, 0, 0.5, 
-  
-  p_N1D_3, 0, 0.5, 
-  p_N2D_3, 0, 0.5, 
-  p_N3D_3, 0, 0.5, 
-  
-  p_N1D_4, 0, 0.5, 
-  p_N2D_4, 0, 0.5, 
-  p_N3D_4, 0, 0.5, 
-
-  p_N2N3_3, 0, 0.1,
-  p_N2N3_4, 0, 0.11,
-  #p_N1D_1, param$p_N1D_1*0.33, param$p_N1D_1*3,     
-  #p_N2D_1, param$p_N2D_1*0.33, param$p_N2D_1*3,
+  #p_N1D_1, 0, 0.5,     
+  #p_N2D_1, 0, 0.5, 
+  #p_N3D_1, 0, 0.5, 
+  #
+  #p_N1D_2, 0, 0.5, 
+  #p_N2D_2, 0, 0.5, 
+  #p_N3D_2, 0, 0.5, 
+  #
+  #p_N1D_3, 0, 0.5, 
+  #p_N2D_3, 0, 0.5, 
+  #p_N3D_3, 0, 0.5, 
+  #
+  #p_N1D_4, 0, 0.5, 
+  #p_N2D_4, 0, 0.5, 
+  #p_N3D_4, 0, 0.5, 
+#
+  #p_N2N3_3, 0, 0.1,
+  #p_N2N3_4, 0, 0.11,
+  ##p_N1D_1, param$p_N1D_1*0.33, param$p_N1D_1*3,     
+  ##p_N2D_1, param$p_N2D_1*0.33, param$p_N2D_1*3,
   #p_N3D_1, param$p_N3D_1*0.33, param$p_N3D_1*3,
   #
   #p_N1D_2, param$p_N1D_2*0.33, param$p_N1D_2*3,
@@ -392,8 +417,8 @@ se <- define_dsa(
   #p_N2D_4, param$p_N2D_4*0.33, param$p_N2D_4*3,
   #p_N3D_4, param$p_N3D_4*0.33, param$p_N3D_4*3,
 
-  c_bsc, (7031.92/2)*0.33, (7031.92/2)*3,
-  c_hosp,  2546*0.33,  2546*3,
+  #c_bsc, (7031.92/2)*0.33, (7031.92/2)*3,
+  #c_hosp,  2546*0.33,  2546*3,
   c_tafa, 100, 100000
   
   #HR, 0.5, 0.9, #from script "estimate beta parameters"
