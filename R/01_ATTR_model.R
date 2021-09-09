@@ -2,6 +2,7 @@
 library(heemod)
 library(tidyverse)
 library(ggplot2)
+library(ggthemes)
 library(dplyr)
 
 #### ATTR_CM Markov model ####
@@ -73,12 +74,27 @@ param <- define_parameters(
           ifelse(markov_cycle >= 3 & markov_cycle < 4, p_N3D_3,
           p_N3D_4))),
   
+  ################################
+  ### scenario analysis
+  ### treatment effect
+  # base case - HR decreases to 0.64 after 30 months (from the ATTR-ACT extension)
+  # intermediate case - HR remains constant over time at 30 month ratio (0.7)
+  # worst case - HR = 1 after month 30
+  ################################
+  #base case: 
   HR_6 = 0.64,  #HR after month 30, included for OWSA 
- 
-  #### TREATMENT EFFECT ####
   HR = ifelse(markov_cycle <= 5 ,0.7,
               HR_6),
   
+  #intermediate case:
+  #HR_6 = 0.7,  #HR after month 30, included for OWSA 
+  #HR = ifelse(markov_cycle <= 5 ,0.7,
+  #            HR_6),
+  #worst case:
+  #HR_6 = 1,  #HR after month 30, included for OWSA 
+  #HR = ifelse(markov_cycle <= 5 ,0.7,
+  #           HR_6),
+  ##
   #### HOSPITALISATION ####
   #bsc cv hosp
   r_hosp = 0.70, # CV hosp rate per person per year
@@ -105,21 +121,28 @@ param <- define_parameters(
   u_NYHA_III_tafa = 0.707, 
   u_NYHA_IV_tafa = 0.558,
   
-  u_NAC_I = (0.4 * u_NYHA_I + 0.6 *  u_NYHA_II)/2,   
-  u_NAC_II = (0.4 * u_NYHA_II + 0.6 *  u_NYHA_III)/2,
-  u_NAC_III =  (0.8 * u_NYHA_III + 0.2 *  u_NYHA_IV)/2,
-  u_NAC_I_tafa = (0.4 * u_NYHA_I_tafa + 0.6 *  u_NYHA_II_tafa)/2,
-  u_NAC_II_tafa = (0.4 * u_NYHA_II_tafa + 0.6 *  u_NYHA_III_tafa)/2,
-  u_NAC_III_tafa = (0.8 * u_NYHA_III_tafa + 0.2 *  u_NYHA_IV_tafa)/2,
+  nyha_w1 = 0.4,
+  nyha_w2 = 1 - nyha_w1,
+  nyha_w3 = 0.4,
+  nyha_w4 = 1 - nyha_w3,
+  nyha_w5 = 0.8,
+  nyha_w6 = 1 - nyha_w5,
+  
+  u_NAC_I = (nyha_w1 * u_NYHA_I + nyha_w2 *  u_NYHA_II)/2,   
+  u_NAC_II = (nyha_w3 * u_NYHA_II + nyha_w4 *  u_NYHA_III)/2,
+  u_NAC_III =  (nyha_w5 * u_NYHA_III + nyha_w6 *  u_NYHA_IV)/2,
+  u_NAC_I_tafa = (nyha_w1 * u_NYHA_I_tafa + nyha_w2 *  u_NYHA_II_tafa)/2,
+  u_NAC_II_tafa = (nyha_w3 * u_NYHA_II_tafa + nyha_w4 *  u_NYHA_III_tafa)/2,
+  u_NAC_III_tafa = (nyha_w5 * u_NYHA_III_tafa + nyha_w6 *  u_NYHA_IV_tafa)/2,
   
   c_NYHA_I = 2532.28, # https://doi.org/10.1007/s10389-011-0452-0 # Inflation adjusted from 2009 to 2020. Converted from EUR to GBP at 2020 conversion rate
   c_NYHA_II = 2887.45,
   c_NYHA_III = 3757.47,
   c_NYHA_IV = 4323.50,
 
-  c_NAC_I = (0.4* c_NYHA_I + 0.6*c_NYHA_II)/2,
-  c_NAC_II = (0.4* c_NYHA_II + 0.6*c_NYHA_III)/2,
-  c_NAC_III = (0.8* c_NYHA_III + 0.2*c_NYHA_IV)/2,
+  c_NAC_I = (nyha_w1 * c_NYHA_I + nyha_w2 * c_NYHA_II)/2,
+  c_NAC_II = (nyha_w3 * c_NYHA_II + nyha_w4 * c_NYHA_III)/2,
+  c_NAC_III = (nyha_w5 * c_NYHA_III + nyha_w6 * c_NYHA_IV)/2,
   
   c_tafa = 10840.82*6, # cost per 6 months; GBP; source: NICE tafamidis STA pp. 137
   #c_bsc = 7031.92/2, # GBP; source nuffield trust estimate for health care sepnding on 75 year olds (UK) inflation adjusted to 2020 ((find actual source)) https://www.theguardian.com/society/2016/feb/01/ageing-britain-two-fifths-nhs-budget-spent-over-65s 
@@ -165,7 +188,7 @@ plot(mat_tafa) #model diagram
 #...............................................................................
 R <- (1+0.03)^(1/3) - 1
 NAC1 <- define_state(
-  cost_background_health = discount(c_NYHA_I, R),
+  cost_background_health = discount(c_NAC_I, R),
   cost_drugs = discount(dispatch_strategy(
       bsc = 0,
       tafa = c_tafa, 
@@ -186,7 +209,7 @@ NAC1 <- define_state(
   life_year = discount(0.5, R)
 )
 NAC2 <- define_state(
-  cost_background_health = discount(c_NYHA_II, R),
+  cost_background_health = discount(c_NAC_II, R),
   cost_drugs = discount(dispatch_strategy(
         bsc = 0,
         tafa = c_tafa, 
@@ -207,7 +230,7 @@ NAC2 <- define_state(
   life_year = discount(0.5, R)
 )
 NAC3 <- define_state(
-  cost_background_health = discount(c_NYHA_III, R),
+  cost_background_health = discount(c_NAC_III, R),
   cost_drugs = discount(dispatch_strategy(
     bsc = 0,
     tafa = c_tafa, 
@@ -257,14 +280,26 @@ res_mod <- run_model(
   parameters = param,
   cycles = 40,
   cost = cost_total,
-  #effect = qaly_total,
-  effect = life_year,
+  effect = qaly_total,
+  #effect = life_year,
   method = "end",
   init = c(436, 350, 159, 0)
+  #init = c(472, 472, 0, 0)
+  #init = c(0, 0, 945, 0)
 )
 summary(res_mod)
 plot(res_mod) # count per state     
 plot(res_mod, type = "ce") # CE frontier
+
+plot(res_mod, type = "counts", panel = "by_state") +
+  xlab("Time") +
+  theme_bw() +
+  scale_color_brewer(
+    name = "Strategy",
+    palette = "Set1"
+  )
+
+
 
 #-------------------------------------------------------------------------------
 #                                  PSA
@@ -299,6 +334,25 @@ beta_u_NAC_I_tafa <-beta_params(mean = .874/2, sigma = .01)
 beta_u_NAC_II_tafa <-beta_params(mean = .832/2, sigma = .01)
 beta_u_NAC_III_tafa <-beta_params(mean = ((0.707+0.558)/2)/2, sigma = .04) 
 
+beta_p_N1N2_1 <- beta_params(mean = 0.002536125, sigma =0.002536125*0.15)
+beta_p_N2N3_1 <- beta_params(mean = 0.003078164 , sigma = 0.003078164*0.15)
+beta_p_N1N2_2 <- beta_params(mean = 0.0905894, sigma = 0.0905894*0.15)
+beta_p_N2N3_2 <- beta_params(mean = 0.2091134, sigma = 0.2091134*0.15)
+beta_p_N1N2_3 <- beta_params(mean = 0.09210348 , sigma = 0.09210348*0.15)
+beta_p_N2N3_3 <- beta_params(mean = 0.06838006 , sigma = 0.06838006*0.15)
+beta_p_N1D_1 <- beta_params(mean = 0.002755 , sigma = 0.002755*0.15)
+beta_p_N2D_1 <- beta_params(mean = 0.005372, sigma = 0.005372*0.15)
+beta_p_N3D_1<- beta_params(mean = 0.012067, sigma = 0.012067*0.15)
+beta_p_N1D_2 <- beta_params(mean = 0.00241 , sigma = 0.00241*0.15)
+beta_p_N2D_2<- beta_params(mean = 0.0590 , sigma = 0.0590*0.15)
+beta_p_N3D_2<- beta_params(mean = 0.1096, sigma = 0.1096*0.15)
+beta_p_N1D_3  <- beta_params(mean = 0.05284029638 , sigma = 0.05284029638*0.15) 
+beta_p_N2D_3 <- beta_params(mean = 0.135174477 , sigma = 0.135174477*0.15)
+beta_p_N3D_3 <- beta_params(mean = 0.2525989344, sigma = 0.2525989344*0.15)
+
+beta_HR_6 <-beta_params(mean = 0.64, sigma =0.64*0.2) 
+beta_HR <-beta_params(mean = 0.7, sigma =0.7*0.2) 
+
 gamma_c_hosp <- gamma_params(mu = 2546, sigma = 507.38)
 
 rsp <- define_psa(
@@ -310,31 +364,36 @@ rsp <- define_psa(
   u_NAC_III_tafa ~ beta(beta_u_NAC_III_tafa$alpha, beta_u_NAC_III_tafa$beta),
   
   disutility_hosp ~ beta(10, 90), # source: https://onlinelibrary.wiley.com/doi/full/10.1002/ehf2.12844
-  p_N1N2_1 ~ beta(param$p_N1N2_1, param$p_N1N2_1*0.15),
-  p_N2N3_1 ~ beta(param$p_N2N3_1, param$p_N2N3_1*0.15),
-  p_N1N2_2 ~ beta(param$p_N1N2_2, param$p_N1N2_2*0.15),
-  p_N2N3_2 ~ beta(param$p_N2N3_2, param$p_N2N3_2*0.15),
-  p_N1N2_3 ~ beta(param$p_N1N2_3, param$p_N1N2_3*0.15),
-  p_N2N3_3 ~ beta(param$p_N2N3_3, param$p_N2N3_3*0.15),
+  p_N1N2_1 ~ beta(beta_p_N1N2_1$alpha, beta_p_N1N2_1$beta),
+  p_N2N3_1 ~ beta(beta_p_N2N3_1$alpha, beta_p_N2N3_1$beta),
+  p_N1N2_2 ~ beta(beta_p_N1N2_2$alpha, beta_p_N1N2_2$beta),
+  p_N2N3_2 ~ beta(beta_p_N2N3_2$alpha, beta_p_N2N3_2$beta),
+  p_N1N2_3 ~ beta(beta_p_N1N2_3$alpha, beta_p_N1N2_3$beta),
+  p_N2N3_3 ~ beta(beta_p_N2N3_3$alpha, beta_p_N2N3_3$beta),
   
-  p_N1D_1 ~ beta(param$p_N1D_1, param$p_N1D_1*0.15),   # alpha = count of events; beta = number at risk - alpha 
-  p_N2D_1 ~ beta(param$p_N2D_1, param$p_N2D_1*0.15),
-  p_N3D_1 ~ beta(param$p_N3D_1, param$p_N3D_1*0.15),
-  p_N1D_2 ~ beta(param$p_N1D_2, param$p_N1D_2*0.15),   
-  p_N2D_2 ~ beta(param$p_N2D_2, param$p_N2D_2*0.15),
-  p_N3D_2 ~ beta(param$p_N3D_2, param$p_N3D_2*0.15),
-  p_N1D_3 ~ beta(param$p_N1D_3, param$p_N1D_3*0.15),   
-  p_N2D_3 ~ beta(param$p_N2D_3, param$p_N2D_3*0.15),
-  p_N3D_3 ~ beta(param$p_N3D_3, param$p_N3D_3*0.15),
-  p_N1D_4 ~ beta(param$p_N1D_4, param$p_N1D_4*0.15),   
-  p_N2D_4 ~ beta(param$p_N2D_4, param$p_N2D_4*0.15),
-  p_N3D_4 ~ beta(param$p_N3D_4, param$p_N3D_4*0.15),
+  p_N1D_1 ~ beta(beta_p_N1D_1$alpha, beta_p_N1D_1$beta),   # alpha = count of events; beta = number at risk - alpha 
+  p_N2D_1 ~ beta(beta_p_N2D_1$alpha, beta_p_N2D_1$beta),
+  p_N3D_1 ~ beta(beta_p_N3D_1$alpha, beta_p_N3D_1$beta),
+  p_N1D_2 ~ beta(beta_p_N1D_2$alpha, beta_p_N1D_2$beta),  
+  p_N2D_2 ~ beta(beta_p_N2D_2$alpha, beta_p_N2D_2$beta),
+  p_N3D_2 ~ beta(beta_p_N3D_2$alpha, beta_p_N3D_2$beta),
+  p_N1D_3 ~ beta(beta_p_N1D_3$alpha, beta_p_N1D_3$beta),  
+  p_N2D_3 ~ beta(beta_p_N2D_3$alpha, beta_p_N2D_3$beta),
+  p_N3D_3 ~ beta(beta_p_N3D_3$alpha, beta_p_N3D_3$beta),
  
-  c_bsc ~ gamma(mean = 7031.92/2, sd = sqrt((7031.92/2))), # "gamma" seems to not require the above gamma function. ?
+  #c_bsc ~ gamma(mean = 7031.92/2, sd = sqrt((7031.92/2))), # "gamma" seems to not require the above gamma function. ?
   c_hosp ~ gamma(mean = 2546, sd= 507.38),
   
-  HR ~ beta(12.02719, 4.639787), #from script "estimate beta parameters"
-  HR_hosp_tafa ~ beta (36.16638, 16.63898)  #from script "estimate beta parameters"
+  c_NAC_I ~ gamma(mean = 1372.691 , sd = sqrt((1372.691*0.15))),
+  c_NAC_II ~ gamma(mean = 1704.731 , sd = sqrt((1704.731*0.15))),
+  c_NAC_III ~ gamma(mean = 1935.338 , sd =sqrt((1935.338*0.15))),
+  
+  HR_6 ~ beta(beta_HR_6$alpha, beta_HR_6$beta),
+  HR ~ beta(beta_HR$alpha, beta_HR$beta)
+  
+  
+  #HR ~ beta(12.02719, 4.639787), #from script "estimate beta parameters"
+  #HR_hosp_tafa ~ beta (36.16638, 16.63898)  #from script "estimate beta parameters"
   
   #TO add:
   #p_N1N2
@@ -347,82 +406,211 @@ rsp <- define_psa(
 pm <- run_psa( 
   model = res_mod,
   psa = rsp,
-  N = 500
+  N = 1000
 )   
 
 summary(pm)
-plot(pm, type = "ac", max_wtp = 1000000, log_scale = FALSE)        
+plot(pm, type = "ac", max_wtp = 2000000, log_scale = FALSE)+
+  theme_minimal()
 plot(pm, type = "cov")
 plot(pm, type = "cov", diff = TRUE, threshold = 10000)
 plot(pm, type = "ce")
-#library(BCEA)
-#bcea <- run_bcea(pm, plot = TRUE, Kmax = 1500000)
+
+library(BCEA)
+bcea <- run_bcea(pm, ref=2, plot = TRUE, Kmax = 1500000)
 
 #-------------------------------------------------------------------------------
 #                                   OWSA
 #...............................................................................
-## best case; HR decreases to 0.64 after 30 months (from the ATTR-ACT extension)
+#### Scenario analysis ####
+
+#########################################
+### 1 
+### Health state utilites 
+# lb: NAC i = NYHA i
+# ub: NAC i = NYHA i+1
+#########################################
+
+## lb
+se_u <- define_dsa(
+  nyha_w1, 0, 1,
+  nyha_w3, 0, 1,
+  nyha_w5, 0, 1
+)
+
+res_dsa_u <- run_dsa(
+  model = res_mod,
+  dsa = se_u
+)
+
+res_dsa_u
+
+plot(res_dsa_u,
+     strategy = "tafa",
+     result = "effect",
+     type = "difference")  
+
+plot(res_dsa_u,
+     strategy = "tafa",
+     result = "cost",
+     type = "difference") 
+
+plot(res_dsa_u, 
+     strategy = "bsc",
+     result = "cost",
+     type = "simple")
+
+plot(res_dsa_u, 
+     strategy = "tafa",
+     result = "effect",
+     type = "simple")
+
+plot(res_dsa_u,
+     strategy = "tafa",
+     result = "icer",
+     type = "difference")
+
+################################
+### 2
+### price of tafa
+# until icer = 30,000
+################################
 
 ## price of tafa
 se_price <- define_dsa(
-  c_tafa, 100, 100000
+  c_tafa, 1910, 100000
   
 )
-  
+res_dsa_price <- run_dsa(
+  model = res_mod,
+  dsa = se_price
+)  
 
+
+
+######################
+# ALL
+######################
+# GET VALUES
+# calling from param$... does not seem to work 
+#
+c_NYHA_I <- 2532.28 # https://doi.org/10.1007/s10389-011-0452-0 # Inflation adjusted from 2009 to 2020. Converted from EUR to GBP at 2020 conversion rate
+c_NYHA_II <- 2887.45
+c_NYHA_III <- 3757.47
+c_NYHA_IV <- 4323.50
+
+c_NAC_I <- (0.4* c_NYHA_I + 0.6*c_NYHA_II)/2
+c_NAC_II <- (0.4* c_NYHA_II + 0.6*c_NYHA_III)/2
+c_NAC_III <- (0.8* c_NYHA_III + 0.2*c_NYHA_IV)/2
+
+u_NYHA_I <- 0.893 # 
+u_NYHA_II <- 0.802
+u_NYHA_III <- 0.706
+u_NYHA_IV <- 0.406 
+
+u_NYHA_I_tafa <- 0.874
+u_NYHA_II_tafa <- 0.832
+u_NYHA_III_tafa <- 0.707 
+u_NYHA_IV_tafa <- 0.558
+
+nyha_w1 <- 0.4
+nyha_w2 <- 1 - nyha_w1
+nyha_w3 <- 0.8
+nyha_w4 <- 1 - nyha_w3
+
+u_NAC_I <- (nyha_w1 * u_NYHA_I + nyha_w2 *  u_NYHA_II)/2   
+u_NAC_II <- (nyha_w1 * u_NYHA_II + nyha_w2 *  u_NYHA_III)/2
+u_NAC_III <-  (nyha_w3 * u_NYHA_III + nyha_w4 *  u_NYHA_IV)/2
+u_NAC_I_tafa <- (nyha_w1 * u_NYHA_I_tafa + nyha_w2 *  u_NYHA_II_tafa)/2
+u_NAC_II_tafa <- (nyha_w1 * u_NYHA_II_tafa + nyha_w2 *  u_NYHA_III_tafa)/2
+u_NAC_III_tafa <- (nyha_w3 * u_NYHA_III_tafa + nyha_w4 *  u_NYHA_IV_tafa)/2
+
+p_N1N2_1 <- 0.002536125
+p_N2N3_1 <- 0.003078164
+
+p_N1N2_2 <- 0.0905894
+p_N2N3_2 <- 0.2091134
+
+p_N1N2_3 <- 0.09210348 
+p_N2N3_3 <- 0.06838006
+
+p_N1N2_4 <- p_N1N2_3
+p_N2N3_4 <- p_N1N2_3
+
+p_N1D_1 <- 0.002755  # month 0 -6
+p_N2D_1 <- 0.005372
+p_N3D_1 <- 0.012067 
+
+p_N1D_2 <- 0.00241 # month 6 - 12
+p_N2D_2 <- 0.0590
+p_N3D_2 <- 0.1096
+
+#p_N1D_3 <- 0.103
+#p_N2D_3 <- 0.252
+#p_N3D_3 <- 0.441
+
+p_N1D_3 <- 0.05284029638 # month 12 - 18
+p_N2D_3 <- 0.135174477
+p_N3D_3 <- 0.2525989344
+
+HR <- 0.7
+HR_6 <- 0.64
+
+p_N1D_1_tafa <- 0.002755*HR  # month 0 -6
+p_N2D_1_tafa <- 0.005372*HR
+p_N3D_1_tafa <- 0.012067*HR 
+p_N1D_2_tafa <- 0.00241*HR # month 6 - 12
+p_N2D_2_tafa <- 0.0590*HR
+p_N3D_2_tafa <- 0.1096*HR
+p_N1D_3_tafa <- 0.05284029638*HR # month 12 - 18
+p_N2D_3_tafa <- 0.135174477*HR 
+p_N3D_3_tafa <- 0.2525989344*HR
+#################################################################################
+
+res_dsa_price
 ## base case; HR remains constant over time 
 se <- define_dsa(
-  #u_NAC_I, 0.2, 0.5,
-  #u_NAC_II, 0.2, 0.5,
-  #u_NAC_III, 0.1, 0.5,
-  #u_NAC_I_tafa, 0.2, 0.5,
-  #u_NAC_II_tafa, 0.2, 0.5, 
-  #u_NAC_III_tafa, 0.2, 0.5, 
+  #HR, 0.51, 0.96, #CI from  https://www.nejm.org/doi/full/10.1056/NEJMoa1805689
+  HR_6, 0.487, 0.979, # CI from https://pubmed.ncbi.nlm.nih.gov/33070419/
   
-  #fudge_up, 0.01, 0.1,
-  
-  #disutility_hosp, 0.025, 0.225, 
+  r_hosp, 0.62, 0.80,
+  HR_hosp_tafa, 0.56, 0.81,
+  disutility_hosp, 0.15, 0.05,
 
-  #p_N1D_1, 0, 0.5,     
-  #p_N2D_1, 0, 0.5, 
-  #p_N3D_1, 0, 0.5, 
-  #
-  #p_N1D_2, 0, 0.5, 
-  #p_N2D_2, 0, 0.5, 
-  #p_N3D_2, 0, 0.5, 
-  #
-  #p_N1D_3, 0, 0.5, 
-  #p_N2D_3, 0, 0.5, 
-  #p_N3D_3, 0, 0.5, 
-  #
-  #p_N1D_4, 0, 0.5, 
-  #p_N2D_4, 0, 0.5, 
-  #p_N3D_4, 0, 0.5, 
-#
-  #p_N2N3_3, 0, 0.1,
-  #p_N2N3_4, 0, 0.11,
-  ##p_N1D_1, param$p_N1D_1*0.33, param$p_N1D_1*3,     
-  ##p_N2D_1, param$p_N2D_1*0.33, param$p_N2D_1*3,
-  #p_N3D_1, param$p_N3D_1*0.33, param$p_N3D_1*3,
-  #
-  #p_N1D_2, param$p_N1D_2*0.33, param$p_N1D_2*3,
-  #p_N2D_2, param$p_N2D_2*0.33, param$p_N2D_2*3,
-  #p_N3D_2, param$p_N3D_2*0.33, param$p_N3D_2*3,
-  #
-  #p_N1D_3, param$p_N1D_3*0.33, param$p_N1D_3*3,
-  #p_N2D_3, param$p_N2D_3*0.33, param$p_N2D_3*3,
-  #p_N3D_3, param$p_N3D_3*0.33, param$p_N3D_3*3,
-  #
-  #p_N1D_4, param$p_N1D_4*0.33, param$p_N1D_4*3,
-  #p_N2D_4, param$p_N2D_4*0.33, param$p_N2D_4*3,
-  #p_N3D_4, param$p_N3D_4*0.33, param$p_N3D_4*3,
-
-  #c_bsc, (7031.92/2)*0.33, (7031.92/2)*3,
-  #c_hosp,  2546*0.33,  2546*3,
-  c_tafa, 100, 100000
+  u_NAC_I, u_NAC_I*0.85, u_NAC_I*1.15,
+  u_NAC_II, u_NAC_II*0.85, u_NAC_II*1.15,
+  u_NAC_III, u_NAC_III*0.85, u_NAC_III*1.15,
+  u_NAC_I_tafa, u_NAC_I_tafa*0.85, u_NAC_I_tafa*1.15,
+  u_NAC_II_tafa, u_NAC_II_tafa*0.85, u_NAC_II_tafa*1.15,
+  u_NAC_III_tafa, u_NAC_III_tafa*0.85, u_NAC_III_tafa*1.15,
   
-  #HR, 0.5, 0.9, #from script "estimate beta parameters"
-  #HR_hosp_tafa, 0.45, 0.85  #from script "estimate beta parameters"
+  #c_tafa, 650, 130089,
+  c_NAC_I, c_NAC_I*0.7, c_NAC_I*1.3,
+  c_NAC_II, c_NAC_II*0.7, c_NAC_II*1.3,
+  c_NAC_III, c_NAC_III*0.7, c_NAC_III*1.3,
+  
+  c_hosp, 2546*0.7, 2546*1.3,
+  
+  p_N1D_1, p_N1D_1*0.7, p_N1D_1*1.3,     
+  p_N2D_1, p_N2D_1*0.7, p_N2D_1*1.3, 
+  p_N3D_1, p_N3D_1*0.7, p_N3D_1*1.3, 
+  
+  p_N1D_2, p_N1D_2*0.7, p_N1D_2*1.3, 
+  p_N2D_2, p_N2D_2*0.7, p_N2D_2*1.3, 
+  p_N3D_2, p_N3D_2*0.7, p_N3D_2*1.3, 
+  
+  p_N1D_3, p_N1D_3*0.7, p_N1D_3*1.3, 
+  p_N2D_3, p_N2D_3*0.7, p_N2D_3*1.3, 
+  p_N3D_3, p_N3D_3*0.7, p_N3D_3*1.3,  
+  
+  p_N1N2_1, p_N1N2_1*0.7, p_N1N2_1*1.3,
+  p_N1N2_2, p_N1N2_2*0.7, p_N1N2_2*1.3,
+  p_N1N2_3, p_N1N2_3*0.7, p_N1N2_3*1.3,
+  
+  p_N2N3_1, p_N2N3_1*0.7, p_N2N3_1*1.3,
+  p_N2N3_2, p_N2N3_2*0.7, p_N2N3_2*1.3,
+  p_N2N3_3, p_N2N3_3*0.7, p_N2N3_3*1.3
+
 )
 
 res_dsa <- run_dsa(
@@ -434,7 +622,7 @@ res_dsa
 
 plot(res_dsa,
      strategy = "tafa",
-     result = "effect",
+     result = "icer",
      type = "difference")  
 
 plot(res_dsa, 
@@ -484,6 +672,11 @@ nac_dist_tafa <-c_state_wide %>%
 #View table 1:
 nac_dist 
 nac_dist_tafa
+
+  
+#### create graph: prop in each state over time.
+
+
 
 #### Table 2: mean LY ####    EDIT: better approach in table 3 
 #BSC
@@ -572,13 +765,14 @@ avg_qaly_bsc <-  sum(values_bsc_wide$qaly_total)/c_n
 avg_ly_bsc <-  sum(values_bsc_wide$life_year)/c_n        
 avg_cost_bsc <-  sum(values_bsc_wide$cost_total)/c_n         
 avg_cost_hosp_bsc <- sum(values_bsc_wide$cost_hosp)/c_n
+avg_cost_bg_bsc <- sum(values_bsc_wide$cost_background_health)/c_n
 
 avg_qaly_tafa <-  sum(values_tafa_wide$qaly_total)/c_n        
 avg_ly_tafa <-  sum(values_tafa_wide$life_year)/c_n        
 avg_cost_tafa <-  sum(values_tafa_wide$cost_total)/c_n         
 avg_cost_hosp_tafa <- sum(values_tafa_wide$cost_hosp)/c_n
+avg_cost_bg_tafa <- sum(values_tafa_wide$cost_background_health)/c_n
 
-avg_drug_cost_tafa <- sum(values_tafa_wide$cost_drugs)/c_n
 
 incremental_cost <- avg_cost_tafa - avg_cost_bsc
 incremental_ly <- avg_ly_tafa - avg_ly_bsc
@@ -590,6 +784,8 @@ result_summary <- data.frame(QALY_tafa =  avg_qaly_tafa,
                              Life_years_bsc = avg_ly_bsc,
                              cost_tafa =  avg_cost_tafa,
                              cost_bsc = avg_cost_bsc,
+                             cost_bg_tafa = avg_cost_bg_tafa,
+                             cost_bg_bsc = avg_cost_bg_bsc,
                              drug_cost_tafa = avg_drug_cost_tafa,
                              hosp_cost_tafa = avg_cost_hosp_tafa,
                              hosp_cost_bsc = avg_cost_hosp_bsc,
@@ -658,8 +854,8 @@ ggplot() +
   geom_line(data=surv_prop, aes(x=markov_cycle, y=proportion_alive), color='green') + 
   geom_line(data=surv_prop_bsc, aes(x=markov_cycle, y=proportion_alive), color='red') +
   geom_line(data=kazi_tafa, aes(x=kazi_x, y=kazi_y), color='blue') +
-  geom_line(data=kazi_bsc, aes(x=kazi_x, y=kazi_y), color='orange') 
-        
+  geom_line(data=kazi_bsc, aes(x=kazi_x, y=kazi_y), color='orange')
+  
         
         
         
