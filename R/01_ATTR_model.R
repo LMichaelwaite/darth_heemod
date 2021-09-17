@@ -49,7 +49,7 @@ param <- define_parameters(
   p_N1N2 = ifelse(markov_cycle <= 1 ,p_N1N2_1,
            ifelse(markov_cycle >= 2 & markov_cycle < 3, p_N1N2_2,
            ifelse(markov_cycle >= 3 & markov_cycle < 4, p_N1N2_3,
-            p_N1N2_4))),  #If greater than 24, then constant at p_N1N2_3. since NAC data only goes to 24.
+            p_N1N2_4))),  #If greater than 4, then constant at p_N1N2_3. since NAC data only goes to 24.
   
   p_N1D = ifelse(markov_cycle <= 1 ,p_N1D_1,
           ifelse(markov_cycle >= 2 & markov_cycle < 3, p_N1D_2,
@@ -144,7 +144,7 @@ param <- define_parameters(
   c_NAC_II = (nyha_w3 * c_NYHA_II + nyha_w4 * c_NYHA_III)/2,
   c_NAC_III = (nyha_w5 * c_NYHA_III + nyha_w6 * c_NYHA_IV)/2,
   
-  c_tafa = 10840.82*6, # cost per 6 months; GBP; source: NICE tafamidis STA pp. 137
+  c_tafa = 10840.8*6, # cost per 6 months; GBP; source: NICE tafamidis STA pp. 137
   #c_bsc = 7031.92/2, # GBP; source nuffield trust estimate for health care sepnding on 75 year olds (UK) inflation adjusted to 2020 ((find actual source)) https://www.theguardian.com/society/2016/feb/01/ageing-britain-two-fifths-nhs-budget-spent-over-65s 
   #c_bsc = 18462/2, # background hc cost 6 months; dollars US Kazi
   c_hosp = 2536.88, # GBP source: NICE tafamidis STA pp.140
@@ -185,8 +185,10 @@ plot(mat_tafa) #model diagram
 
 #-------------------------------------------------------------------------------
 #           DEFINE strategy & state dependent costs and utilities
+
 #...............................................................................
 R <- (1+0.03)^(1/3) - 1
+
 NAC1 <- define_state(
   cost_background_health = discount(c_NAC_I, R),
   cost_drugs = discount(dispatch_strategy(
@@ -278,7 +280,7 @@ res_mod <- run_model(
   bsc = strat_bsc,
   tafa = strat_tafa,
   parameters = param,
-  cycles = 40,
+  cycles = 62,
   cost = cost_total,
   effect = qaly_total,
   #effect = life_year,
@@ -286,6 +288,7 @@ res_mod <- run_model(
   init = c(436, 350, 159, 0)
   #init = c(472, 472, 0, 0)
   #init = c(0, 0, 945, 0)
+  #init = c(945, 0, 0, 0)
 )
 summary(res_mod)
 plot(res_mod) # count per state     
@@ -403,6 +406,7 @@ rsp <- define_psa(
 )
 
 #"run_psa" is masked from dampack, must specify heemod
+
 pm <- run_psa( 
   model = res_mod,
   psa = rsp,
@@ -410,11 +414,68 @@ pm <- run_psa(
 )   
 
 summary(pm)
+
+
 plot(pm, type = "ac", max_wtp = 2000000, log_scale = FALSE)+
   theme_minimal()
+
+
+
+
+
 plot(pm, type = "cov")
-plot(pm, type = "cov", diff = TRUE, threshold = 10000)
-plot(pm, type = "ce")
+plot(pm, type = "cov", diff = TRUE, threshold = 100000)
+plot(res_psa, type = "cov")
+plot(pm, type = "ce")+
+  geom_bin2d(bins = 50) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()
+
+ggplot(data, aes(x=x, y=y) ) +
+  geom_hex() +
+  theme_bw()
+
+plot(pm, type = "evpi", max_wtp = 2000000, log_scale = FALSE)
+
+p <- plot(pm, type = "ce") +
+  geom_point(alpha = 0.1)
+
+z <- layer_data(p, 1)
+zero <- c(0,0)
+
+
+z_1 <- data.frame(Incremental_effect = z$x,
+                  Incremental_cost = z$y) %>%
+  filter(Incremental_effect > 0) %>%
+  filter(Incremental_effect < 3.5)
+  
+z_1 <- rbind(z_1, zero)
+
+    scale_color_brewer(name = "Treatment", palette = "Set1") +
+     facet_wrap(~ .strategy_names) +
+    xlab("Incremental QALYs") + ylab("Incremental Costs") +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hex(bins = 25) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()
+  
+  
+
+
+ggplot(z_1 , aes(x=Incremental_effect, y=Incremental_cost) ) +
+  geom_hex(bins = 70) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw() 
+  
+
+  ylim = c(0, 1200000)
+
+
+
+
+
+
 
 library(BCEA)
 bcea <- run_bcea(pm, ref=2, plot = TRUE, Kmax = 1500000)
@@ -565,6 +626,19 @@ p_N3D_2_tafa <- 0.1096*HR
 p_N1D_3_tafa <- 0.05284029638*HR # month 12 - 18
 p_N2D_3_tafa <- 0.135174477*HR 
 p_N3D_3_tafa <- 0.2525989344*HR
+
+
+
+r_hosp <- 0.70 # CV hosp rate per person per year
+p_hosp <- 1- exp(-r_hosp*1/2) #CV hosp 6 month probability 
+
+#tafamidis cv hosp
+HR_hosp_tafa <- 0.68
+r_hosp_tafa <- r_hosp * HR_hosp_tafa # CV hosp rate per person per year
+p_hosp_tafa <- 1- exp(-r_hosp_tafa*1/2) # CV hosp 6 month probability
+
+disutility_hosp <- 0.10 # https://onlinelibrary.wiley.com/doi/full/10.1002/ehf2.12844
+
 #################################################################################
 
 res_dsa_price
@@ -591,25 +665,25 @@ se <- define_dsa(
   
   c_hosp, 2546*0.7, 2546*1.3,
   
-  p_N1D_1, p_N1D_1*0.7, p_N1D_1*1.3,     
-  p_N2D_1, p_N2D_1*0.7, p_N2D_1*1.3, 
-  p_N3D_1, p_N3D_1*0.7, p_N3D_1*1.3, 
+  p_N1D_1, p_N1D_1*0.5, p_N1D_1*1.5,     
+  p_N2D_1, p_N2D_1*0.5, p_N2D_1*1.5, 
+  p_N3D_1, p_N3D_1*0.5, p_N3D_1*1.5, 
   
-  p_N1D_2, p_N1D_2*0.7, p_N1D_2*1.3, 
-  p_N2D_2, p_N2D_2*0.7, p_N2D_2*1.3, 
-  p_N3D_2, p_N3D_2*0.7, p_N3D_2*1.3, 
+  p_N1D_2, p_N1D_2*0.5, p_N1D_2*1.5, 
+  p_N2D_2, p_N2D_2*0.5, p_N2D_2*1.5, 
+  p_N3D_2, p_N3D_2*0.5, p_N3D_2*1.5, 
   
-  p_N1D_3, p_N1D_3*0.7, p_N1D_3*1.3, 
-  p_N2D_3, p_N2D_3*0.7, p_N2D_3*1.3, 
-  p_N3D_3, p_N3D_3*0.7, p_N3D_3*1.3,  
+  p_N1D_3, p_N1D_3*0.5, p_N1D_3*1.5, 
+  p_N2D_3, p_N2D_3*0.5, p_N2D_3*1.5, 
+  p_N3D_3, p_N3D_3*0.5, p_N3D_3*1.5,  
   
-  p_N1N2_1, p_N1N2_1*0.7, p_N1N2_1*1.3,
-  p_N1N2_2, p_N1N2_2*0.7, p_N1N2_2*1.3,
-  p_N1N2_3, p_N1N2_3*0.7, p_N1N2_3*1.3,
+  p_N1N2_1, p_N1N2_1*0.5, p_N1N2_1*1.5,
+  p_N1N2_2, p_N1N2_2*0.5, p_N1N2_2*1.5,
+  p_N1N2_3, p_N1N2_3*0.5, p_N1N2_3*1.5,
   
-  p_N2N3_1, p_N2N3_1*0.7, p_N2N3_1*1.3,
-  p_N2N3_2, p_N2N3_2*0.7, p_N2N3_2*1.3,
-  p_N2N3_3, p_N2N3_3*0.7, p_N2N3_3*1.3
+  p_N2N3_1, p_N2N3_1*0.5, p_N2N3_1*1.5,
+  p_N2N3_2, p_N2N3_2*0.5, p_N2N3_2*1.5,
+  p_N2N3_3, p_N2N3_3*0.5, p_N2N3_3*1.5
 
 )
 
@@ -623,7 +697,8 @@ res_dsa
 plot(res_dsa,
      strategy = "tafa",
      result = "icer",
-     type = "difference")  
+     type = "difference",
+     limits_by_bars = FALSE)
 
 plot(res_dsa, 
      strategy = "bsc",
@@ -640,6 +715,92 @@ plot(res_dsa,
 #                       Extra tables and graphs
 #...............................................................................
 c_n <- sum(c(436, 350, 159, 0))   # cohort size    
+
+#### PSA get summary output
+
+psa_results <- pm$run_model
+
+cost_background_bsc <- psa_results$cost_background_health[1]/c_n
+cost_background_tafa <- psa_results$cost_background_health[2]/c_n
+cost_hosp_bsc <- psa_results$cost_hosp[1]/c_n
+cost_hosp_tafa <- psa_results$cost_hosp[2]/c_n
+
+cost_drugs_bsc <- psa_results$cost_drugs[1]/c_n
+cost_drugs_tafa <- psa_results$cost_drugs[2]/c_n
+cost_total_bsc <- psa_results$cost_total[1]/c_n
+cost_total_tafa <- psa_results$cost_total[2]/c_n
+
+qaly_bsc <- psa_results$qaly[1]/c_n
+qaly_tafa <- psa_results$qaly[2]/c_n
+cv_hosp_disutility_bsc <- psa_results$cv_hosp_disutility[1]/c_n
+cv_hosp_disutility_tafa <- psa_results$cv_hosp_disutility[2]/c_n
+qaly_totals_bsc <- psa_results$qaly_total[1]/c_n
+qaly_totals_tafa <- psa_results$qaly_total[2]/c_n
+life_year_bsc <- psa_results$life_year[1]/c_n
+life_year_tafa <- psa_results$life_year[2]/c_n
+
+
+
+
+cost_background_bsc
+cost_background_tafa
+cost_drugs_bsc 
+cost_drugs_tafa
+cost_total_bsc 
+cost_total_tafa
+cost_hosp_bsc
+cost_hosp_tafa
+qaly_bsc
+qaly_tafa 
+cv_hosp_disutility_bsc 
+cv_hosp_disutility_tafa 
+qaly_totals_bsc 
+qaly_totals_tafa
+life_year_bsc
+life_year_tafa 
+
+
+ICER_years <- (cost_total_tafa - cost_total_bsc ) / (life_year_tafa  - life_year_bsc )
+ICER_qaly <- (cost_total_tafa - cost_total_bsc ) / (qaly_totals_tafa  - qaly_totals_bsc )
+
+
+psa_summary <- data.frame(cost_background_bsc,
+                          cost_background_tafa,
+                          cost_cost_drugs_bsc ,
+                          cost_cost_drugs_tafa,
+                          cost_cost_total_bsc ,
+                          cost_cost_total_tafa,
+                          
+                          qaly_bsc,
+                          qaly_tafa, 
+                          cv_hosp_disutility_bsc ,
+                          cv_hosp_disutility_tafa ,
+                          qaly_totals_bsc ,
+                          qaly_totals_tafa,
+                          life_year_bsc,
+                          life_year_tafa 
+                          
+)
+                          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Tidy data
 #get state counts
@@ -772,7 +933,7 @@ avg_ly_tafa <-  sum(values_tafa_wide$life_year)/c_n
 avg_cost_tafa <-  sum(values_tafa_wide$cost_total)/c_n         
 avg_cost_hosp_tafa <- sum(values_tafa_wide$cost_hosp)/c_n
 avg_cost_bg_tafa <- sum(values_tafa_wide$cost_background_health)/c_n
-
+avg_drug_cost_tafa <- sum(values_tafa_wide$cost_drugs)/c_n
 
 incremental_cost <- avg_cost_tafa - avg_cost_bsc
 incremental_ly <- avg_ly_tafa - avg_ly_bsc
@@ -847,14 +1008,30 @@ kazi_x_bsc<-kazi_surv_bsc[,1]/6
 kazi_y_bsc<-kazi_surv_bsc[,2]
 kazi_bsc <- data.frame(kazi_x = kazi_x_bsc, kazi_y = kazi_y_bsc)
 
+#rozen
+rozen_surv_tafa<- read.csv("data_raw/rozen_tafa.csv", header = FALSE)
+rozen_x_tafa<-rozen_surv_tafa[,1]/6
+rozen_y_tafa<-rozen_surv_tafa[,2]
+rozen_tafa <- data.frame(rozen_x = rozen_x_tafa, rozen_y = rozen_y_tafa)
+
+rozen_surv_bsc<- read.csv("data_raw/rozen_control.csv", header = FALSE)
+rozen_x_bsc<-rozen_surv_bsc[,1]/6
+rozen_y_bsc<-rozen_surv_bsc[,2]
+rozen_bsc <- data.frame(rozen_x = rozen_x_bsc, rozen_y = rozen_y_bsc)
+
+
+
 
 
 #plot surv_prop curve
 ggplot() + 
-  geom_line(data=surv_prop, aes(x=markov_cycle, y=proportion_alive), color='green') + 
+  geom_line(data=surv_prop, aes(x=markov_cycle, y=proportion_alive), color='red', linetype=2) + 
   geom_line(data=surv_prop_bsc, aes(x=markov_cycle, y=proportion_alive), color='red') +
   geom_line(data=kazi_tafa, aes(x=kazi_x, y=kazi_y), color='blue') +
-  geom_line(data=kazi_bsc, aes(x=kazi_x, y=kazi_y), color='orange')
+  geom_line(data=kazi_bsc, aes(x=kazi_x, y=kazi_y), color='blue', linetype=2)+
+  geom_line(data=rozen_tafa, aes(x=rozen_x, y=rozen_y), color='black', linetype=2) +
+  geom_line(data=rozen_bsc, aes(x=rozen_x, y=rozen_y), color='black')+
+  theme_minimal()
   
         
         
